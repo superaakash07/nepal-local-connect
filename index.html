@@ -467,10 +467,8 @@
         // --- Firestore Operations (Unchanged) ---
 
         // Path helpers based on the security rules
-        // CRITICAL FIX: Use the simple, common collection path
-        const LISTINGS_COLLECTION_NAME = 'listings';
-        const getListingsCollection = () => collection(db, LISTINGS_COLLECTION_NAME);
-        const getListingDocRef = (id) => doc(getListingsCollection(), id);
+        const getPublicListingsCollection = () => collection(db, `artifacts/${appId}/public/data/listings`);
+        const getListingDocRef = (id) => doc(getPublicListingsCollection(), id);
 
         // Real-time listener for all listings
         function setupRealtimeListener() {
