@@ -72,7 +72,7 @@
             </div>
 
             <div class="mt-6 flex justify-end">
-                <button onclick="closeModal('payment-modal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">Cancel</button>
+                <button type="button" onclick="closeModal('payment-modal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">Cancel</button>
             </div>
         </div>
     </div>
@@ -93,7 +93,7 @@
                 </p>
             </div>
             <div class="mt-6 flex justify-end">
-                <button onclick="closeModal('bank-modal'); closeModal('payment-modal');" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">I Understand</button>
+                <button onclick="closeModal('bank-modal');" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">I Understand</button>
             </div>
         </div>
     </div>
@@ -405,8 +405,11 @@
             try {
                 await addDoc(getPublicListingsCollection(), newListing);
                 showToast('Listing submitted successfully! It will appear shortly.');
+                
+                // FIX: Added explicit call to close modal and reset form on success
                 closeModal('post-listing-modal');
-                e.target.reset();
+                e.target.reset(); 
+
             } catch (error) {
                 showToast('Error saving listing. Check console.', 'error');
                 console.error("Error submitting listing: ", error);
@@ -662,10 +665,11 @@
             // 2. Check for payment redirects immediately
             checkPaymentStatus();
 
-            // 3. Fix for Post My Business button issue: Attach event listener after DOM is ready
+            // 3. FIX: Dedicated listener for the post button after DOM is ready
             const postBtn = document.getElementById('post-business-btn');
             if (postBtn) {
-                postBtn.addEventListener('click', () => {
+                postBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
                     showModal('post-listing-modal');
                 });
             }
