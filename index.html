@@ -3,26 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nepal Local Connect - Local Business Directory</title>
+    <title>Nepal's Best - Local Business Directory</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMD/CDQ6RzYxVvP6xqqs0cW7RjrjT2h/P27wJ0l7/J2s9e+2iYfB0y4L1Zt1t5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+        /* Define a rich color palette: Red (Nepal flag) and Gold (Accent) */
+        :root {
+            --color-primary: #FF4438; /* Nepal Flag Red */
+            --color-secondary: #0076a8; /* Deep Blue */
+            --color-accent: #FFD700; /* Gold/Yellow */
+        }
+        .bg-primary { background-color: var(--color-primary); }
+        .text-primary { color: var(--color-primary); }
+        .border-accent { border-color: var(--color-accent); }
+        
+        body { font-family: 'Inter', sans-serif; }
+
         /* Custom scrollbar for better aesthetics */
-        body::-webkit-scrollbar {
-            width: 8px;
-        }
-        body::-webkit-scrollbar-thumb {
-            background-color: #3b82f6; /* Tailwind blue-500 */
-            border-radius: 4px;
-        }
+        body::-webkit-scrollbar { width: 8px; }
+        body::-webkit-scrollbar-thumb { background-color: #3b82f6; border-radius: 4px; }
+        
         .listing-card {
             transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
         }
         .listing-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+        }
+        .card-image-placeholder {
+            height: 150px;
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+            background-image: linear-gradient(135deg, #FFD700 10%, #FF4438 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            position: relative;
         }
     </style>
 </head>
@@ -31,7 +51,7 @@
     <!-- Loading/Status Indicator Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
         <div class="text-center p-6 bg-white rounded-lg shadow-xl">
-            <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-8 w-8 text-primary mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -45,14 +65,14 @@
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Upgrade to Top Chart Listing</h2>
             <p class="text-sm text-gray-600 mb-6">
                 Place your business at the top of search results for 30 days to maximize visibility.
-                <span class="font-semibold text-blue-600">Price: NPR 500.00.</span>
+                <span class="font-semibold text-primary">Price: NPR 500.00.</span>
             </p>
 
             <!-- Current Listing Details -->
-            <div id="payment-listing-details" class="bg-blue-50 p-3 rounded-lg mb-6 border border-blue-200 text-sm">
-                <p class="font-medium text-blue-800">Target Listing:</p>
-                <p id="modal-listing-name" class="font-bold text-lg text-blue-900 mt-1"></p>
-                <p id="modal-listing-id" class="text-xs text-blue-700 mt-0.5"></p>
+            <div id="payment-listing-details" class="bg-red-50 p-3 rounded-lg mb-6 border border-red-200 text-sm">
+                <p class="font-medium text-red-800">Target Listing:</p>
+                <p id="modal-listing-name" class="font-bold text-lg text-red-900 mt-1"></p>
+                <p id="modal-listing-id" class="text-xs text-red-700 mt-0.5"></p>
             </div>
 
             <!-- Payment Method Selection -->
@@ -87,7 +107,7 @@
                 <p>Please transfer **NPR 500.00** to the account below and include your Listing ID in the remarks.</p>
                 <div class="bg-gray-100 p-4 rounded-lg">
                     <p><strong>Bank Name:</strong> Rastriya Banijya Bank</p>
-                    <p><strong>Account Name:</strong> Nepal Local Connect</p>
+                    <p><strong>Account Name:</strong> Nepal's Best</p>
                     <p><strong>Account No:</strong> 1234567890</p>
                     <p id="bank-listing-id"><strong>Your Listing ID:</strong> </p>
                 </div>
@@ -96,7 +116,7 @@
                 </p>
             </div>
             <div class="mt-6 flex justify-end">
-                <button onclick="closeModal('bank-modal');" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">I Understand</button>
+                <button onclick="closeModal('bank-modal');" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-red-600 transition-colors font-medium">I Understand</button>
             </div>
         </div>
     </div>
@@ -106,15 +126,15 @@
 
 
     <!-- Navigation -->
-    <header class="bg-white shadow-md sticky top-0 z-30">
+    <header class="bg-white shadow-lg sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-            <div class="flex items-center space-x-2">
-                <i class="fas fa-map-marker-alt text-2xl text-blue-600"></i>
-                <a href="/" class="text-2xl font-extrabold text-gray-900">NP Local Connect</a>
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-mountain text-2xl text-primary"></i>
+                <a href="/" class="text-2xl font-extrabold text-gray-900 tracking-tight">Nepal's Best</a>
             </div>
             <nav class="flex items-center space-x-4">
-                <a href="#listings" class="text-gray-600 hover:text-blue-600 transition-colors font-medium">Home</a>
-                <button id="post-business-btn" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold shadow-md">
+                <a href="#listings" class="text-gray-600 hover:text-primary transition-colors font-medium">Home</a>
+                <button id="post-business-btn" class="px-4 py-2 bg-primary text-white rounded-full hover:bg-red-600 transition-colors font-semibold shadow-md">
                     + Post My Business
                 </button>
             </nav>
@@ -125,16 +145,16 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         <!-- Hero Section -->
-        <div class="bg-blue-600 text-white p-8 rounded-xl shadow-lg mb-8">
-            <h1 class="text-4xl sm:text-5xl font-extrabold mb-2">Discover Local Gems in Nepal</h1>
-            <p class="text-xl font-light">Supporting local shops and restaurants, starting with Biratnagar.</p>
+        <div class="bg-secondary text-white p-12 rounded-xl shadow-xl mb-10 text-center">
+            <h1 class="text-4xl sm:text-5xl font-extrabold mb-3">Find the Best Local Businesses</h1>
+            <p class="text-xl font-light opacity-90">Restaurants, shops, and services verified by the Nepali community.</p>
         </div>
 
         <!-- Filter and Controls -->
-        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8 bg-white p-4 rounded-xl shadow-md">
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-10 bg-white p-4 rounded-xl shadow-lg border-t-4 border-primary">
             
             <!-- City Filter -->
-            <select id="city-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            <select id="city-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary transition-colors">
                 <option value="all">All Cities (Nepal)</option>
                 <option value="biratnagar">Biratnagar</option>
                 <option value="kathmandu">Kathmandu</option>
@@ -143,7 +163,7 @@
             </select>
 
             <!-- Category Filter -->
-            <select id="category-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            <select id="category-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary transition-colors">
                 <option value="all">All Categories</option>
                 <option value="restaurant">Restaurant</option>
                 <option value="shop">Local Shop</option>
@@ -152,11 +172,11 @@
             </select>
 
             <!-- Search Bar -->
-            <input type="text" id="search-input" oninput="filterListings()" placeholder="Search by name or description..." class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            <input type="text" id="search-input" oninput="filterListings()" placeholder="Search by name or description..." class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary transition-colors">
         </div>
 
         <!-- Listings Grid -->
-        <div id="listings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="listings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <!-- Listings will be injected here by JavaScript -->
         </div>
 
@@ -173,13 +193,13 @@
                 
                 <div>
                     <label for="business-name" class="block text-sm font-medium text-gray-700">Business Name</label>
-                    <input type="text" id="business-name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="business-name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label for="city-input" class="block text-sm font-medium text-gray-700">City</label>
-                        <select id="city-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <select id="city-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary">
                             <option value="">Select City</option>
                             <option value="biratnagar">Biratnagar</option>
                             <option value="kathmandu">Kathmandu</option>
@@ -189,7 +209,7 @@
                     </div>
                     <div>
                         <label for="category-input" class="block text-sm font-medium text-gray-700">Category</label>
-                        <select id="category-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <select id="category-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary">
                             <option value="">Select Category</option>
                             <option value="restaurant">Restaurant</option>
                             <option value="shop">Local Shop</option>
@@ -201,17 +221,17 @@
 
                 <div>
                     <label for="address" class="block text-sm font-medium text-gray-700">Physical Address / Landmark</label>
-                    <input type="text" id="address" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="address" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary">
                 </div>
                 
                 <div>
                     <label for="description" class="block text-sm font-medium text-gray-700">Description (What makes you unique?)</label>
-                    <textarea id="description" rows="3" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    <textarea id="description" rows="3" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary"></textarea>
                 </div>
                 
                 <div class="pt-4 flex justify-end space-x-3">
                     <button type="button" id="cancel-listing-btn" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
-                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Listing</button>
+                    <button type="submit" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-md">Submit Listing</button>
                 </div>
             </form>
         </div>
@@ -234,12 +254,12 @@
 
                 <div>
                     <label for="review-text" class="block text-sm font-medium text-gray-700">Your Comments</label>
-                    <textarea id="review-text" rows="4" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    <textarea id="review-text" rows="4" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary"></textarea>
                 </div>
                 
                 <div class="pt-4 flex justify-end space-x-3">
                     <button type="button" onclick="closeModal('review-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
-                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Review</button>
+                    <button type="submit" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-md">Submit Review</button>
                 </div>
             </form>
         </div>
@@ -523,40 +543,45 @@
                 const ratingStarsHtml = generateStars(parseFloat(listing.avgRating));
                 
                 const featuredBadge = listing.is_featured 
-                    ? `<span class="absolute top-0 right-0 bg-yellow-500 text-white text-xs font-bold uppercase px-3 py-1 rounded-bl-lg shadow-lg">
+                    ? `<span class="absolute top-0 right-0 bg-accent text-gray-900 text-xs font-bold uppercase px-3 py-1 rounded-bl-lg shadow-lg">
                         <i class="fas fa-crown mr-1"></i> TOP CHART
                        </span>` 
                     : '';
                 
                 const card = document.createElement('div');
-                card.className = 'listing-card bg-white p-6 rounded-xl shadow-lg relative border border-gray-100';
+                card.className = 'listing-card bg-white p-0 rounded-xl shadow-lg relative border border-gray-100';
                 card.innerHTML = `
                     ${featuredBadge}
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">${listing.name}</h3>
-                    <p class="text-sm text-blue-600 font-medium mb-3 uppercase">${listing.category} in ${listing.city}</p>
-                    
-                    <div class="flex items-center space-x-2 mb-3">
-                        <span class="text-lg font-bold text-yellow-500">${listing.avgRating}</span>
-                        ${ratingStarsHtml}
-                        <span class="text-sm text-gray-500">(${listing.ratingCount} reviews)</span>
+                    <div class="card-image-placeholder rounded-t-xl">
+                        <i class="fas fa-${listing.category === 'restaurant' ? 'utensils' : listing.category === 'shop' ? 'store' : listing.category === 'hotel' ? 'bed' : 'concierge-bell'} text-4xl opacity-70"></i>
                     </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">${listing.name}</h3>
+                        <p class="text-xs text-secondary font-medium mb-3 uppercase tracking-wider">${listing.category} in ${listing.city}</p>
+                        
+                        <div class="flex items-center space-x-2 mb-3">
+                            <span class="text-lg font-extrabold text-accent">${listing.avgRating}</span>
+                            ${ratingStarsHtml}
+                            <span class="text-sm text-gray-500">(${listing.ratingCount} reviews)</span>
+                        </div>
 
-                    <p class="text-gray-700 mb-4">${listing.description}</p>
-                    
-                    <div class="text-sm text-gray-600 space-y-1 mb-4">
-                        <p><i class="fas fa-map-marker-alt text-gray-400 mr-2"></i> ${listing.address}</p>
-                    </div>
+                        <p class="text-gray-700 mb-4 text-sm line-clamp-2">${listing.description}</p>
+                        
+                        <div class="text-sm text-gray-600 space-y-1 mb-4">
+                            <p><i class="fas fa-map-marker-alt text-gray-400 mr-2"></i> ${listing.address}</p>
+                        </div>
 
-                    <div class="flex space-x-3">
-                        <button onclick="showModal('review-modal', '${listing.id}')" class="flex-1 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium">
-                            <i class="fas fa-star mr-1"></i> Add Review
-                        </button>
-                        ${listing.created_by === userId ? 
-                           `<button onclick="showModal('payment-modal', '${listing.id}')" class="flex-1 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium">
-                                <i class="fas fa-arrow-up mr-1"></i> Go Top Chart
-                            </button>`
-                            : ''
-                        }
+                        <div class="flex space-x-3 mt-4">
+                            <button onclick="showModal('review-modal', '${listing.id}')" class="flex-1 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-blue-800 transition-colors font-medium shadow-md">
+                                <i class="fas fa-star mr-1"></i> Add Review
+                            </button>
+                            ${listing.created_by === userId ? 
+                               `<button onclick="showModal('payment-modal', '${listing.id}')" class="flex-1 py-2 text-sm bg-primary text-white rounded-lg hover:bg-red-600 transition-colors font-medium shadow-md">
+                                    <i class="fas fa-arrow-up mr-1"></i> Top Chart
+                                </button>`
+                                : ''
+                            }
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -564,8 +589,8 @@
         }
 
         function generateStars(rating) {
-            const fullStar = '<i class="fas fa-star text-yellow-500"></i>';
-            const emptyStar = '<i class="far fa-star text-yellow-500"></i>';
+            const fullStar = `<i class="fas fa-star" style="color: var(--color-accent);"></i>`;
+            const emptyStar = `<i class="far fa-star" style="color: var(--color-accent);"></i>`;
             let stars = '';
             for (let i = 1; i <= 5; i++) {
                 stars += i <= Math.round(rating) ? fullStar : emptyStar;
@@ -697,7 +722,7 @@
             if (cancelBtn) {
                 cancelBtn.addEventListener('click', () => {
                     closeModal('post-listing-modal');
-                    // Reset the form in case the user was partially filling it out
+                    // Reset the form
                     document.getElementById('listing-form').reset();
                 });
             }
