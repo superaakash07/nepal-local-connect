@@ -210,7 +210,7 @@
                 </div>
                 
                 <div class="pt-4 flex justify-end space-x-3">
-                    <button type="button" onclick="closeModal('post-listing-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="button" id="cancel-listing-btn" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
                     <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Listing</button>
                 </div>
             </form>
@@ -689,6 +689,16 @@
                 postBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     showModal('post-listing-modal');
+                });
+            }
+
+            // 4. FIX: Dedicated listener for the modal CANCEL button
+            const cancelBtn = document.getElementById('cancel-listing-btn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    closeModal('post-listing-modal');
+                    // Reset the form in case the user was partially filling it out
+                    document.getElementById('listing-form').reset();
                 });
             }
             
