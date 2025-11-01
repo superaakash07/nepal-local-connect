@@ -11,13 +11,14 @@
     <style>
         /* Define a rich color palette: Red (Nepal flag) and Gold (Accent) */
         :root {
-            --color-primary: #FF4438; /* Nepal Flag Red */
-            --color-secondary: #0076a8; /* Deep Blue */
-            --color-accent: #FFD700; /* Gold/Yellow */
+            --color-primary: #FF4438; /* Nepal Flag Red - Main Action */
+            --color-secondary: #0076a8; /* Deep Blue - Background/Info */
+            --color-accent: #FFD700; /* Gold/Yellow - Ratings/Badges */
+            --color-review: #10B981; /* Emerald Green - Review Action (New) */
         }
         .bg-primary { background-color: var(--color-primary); }
         .text-primary { color: var(--color-primary); }
-        .border-accent { border-color: var(--color-accent); }
+        .bg-secondary { background-color: var(--color-secondary); }
         
         body { font-family: 'Inter', sans-serif; }
 
@@ -35,7 +36,7 @@
         }
         .card-image-placeholder {
             height: 150px;
-            background-color: #f3f4f6; /* Tailwind gray-100 */
+            background-color: #f3f4f6;
             background-image: linear-gradient(135deg, #FFD700 10%, #FF4438 100%);
             display: flex;
             align-items: center;
@@ -145,7 +146,6 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         <!-- Hero Section -->
-        <!-- FIX: Changed text to dark gray for high contrast -->
         <div class="bg-secondary p-12 rounded-xl shadow-xl mb-10 text-center text-gray-800">
             <h1 class="text-4xl sm:text-5xl font-extrabold mb-3">Find the Best Local Businesses</h1>
             <p class="text-xl font-light opacity-90">Restaurants, shops, and services verified by the Nepali community.</p>
@@ -549,6 +549,11 @@
                        </span>` 
                     : '';
                 
+                // Determine the button classes
+                const isOwner = listing.created_by === userId;
+                const reviewButtonClass = 'flex-1 py-2 text-sm bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors font-medium shadow-md';
+                const topChartButtonClass = 'flex-1 py-2 text-sm bg-primary text-white rounded-lg hover:bg-red-600 transition-colors font-medium shadow-md';
+                
                 const card = document.createElement('div');
                 card.className = 'listing-card bg-white p-0 rounded-xl shadow-lg relative border border-gray-100';
                 card.innerHTML = `
@@ -573,11 +578,14 @@
                         </div>
 
                         <div class="flex space-x-3 mt-4">
-                            <button onclick="showModal('review-modal', '${listing.id}')" class="flex-1 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-blue-800 transition-colors font-medium shadow-md">
+                            <!-- Review Button (Always visible) -->
+                            <button onclick="showModal('review-modal', '${listing.id}')" class="${reviewButtonClass}">
                                 <i class="fas fa-star mr-1"></i> Add Review
                             </button>
-                            ${listing.created_by === userId ? 
-                               `<button onclick="showModal('payment-modal', '${listing.id}')" class="flex-1 py-2 text-sm bg-primary text-white rounded-lg hover:bg-red-600 transition-colors font-medium shadow-md">
+                            
+                            <!-- Top Chart Button (Only visible to owner) -->
+                            ${isOwner ? 
+                               `<button onclick="showModal('payment-modal', '${listing.id}')" class="${topChartButtonClass}">
                                     <i class="fas fa-arrow-up mr-1"></i> Top Chart
                                 </button>`
                                 : ''
