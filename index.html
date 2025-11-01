@@ -157,7 +157,7 @@
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 
-                // FIX: Define Auth immediately after app initialization
+                // Define Auth immediately after app initialization
                 auth = getAuth(app); 
                 
                 // Start listening to auth state changes and sign in if needed
@@ -166,6 +166,7 @@
                         if (user) {
                             userId = user.uid;
                         } else {
+                            // FIX: Simplify authentication flow for Netlify deployment
                             // Only use custom token if available (original editor environment)
                             if (initialAuthToken) {
                                 await signInWithCustomToken(auth, initialAuthToken);
