@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nepal Local Connect - Local Business Directory</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome CDN (Updated Link) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMD/CDQ6RzYxVvP6xqqs0cW7RjrjT2h/P27wJ0l7/J2s9e+2iYfB0y4L1Zt1t5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMD/CDQ6RzYxVvP6xqqs0cW7RjrjT2h/P27wJ0l7/J2s9e+2iYfB0y4L1Zt1t5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         /* Custom scrollbar for better aesthetics */
         body::-webkit-scrollbar {
@@ -35,7 +33,6 @@
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
 
-    <!-- Loading/Status Indicator Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
         <div class="text-center p-6 bg-white rounded-lg shadow-xl">
             <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -46,7 +43,6 @@
         </div>
     </div>
 
-    <!-- Payment Modal -->
     <div id="payment-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 transform transition-all p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Upgrade to Top Chart Listing</h2>
@@ -55,38 +51,32 @@
                 <span class="font-semibold text-blue-600">Price: NPR 500.00.</span>
             </p>
 
-            <!-- Current Listing Details -->
             <div id="payment-listing-details" class="bg-blue-50 p-3 rounded-lg mb-6 border border-blue-200 text-sm">
                 <p class="font-medium text-blue-800">Target Listing:</p>
                 <p id="modal-listing-name" class="font-bold text-lg text-blue-900 mt-1"></p>
                 <p id="modal-listing-id" class="text-xs text-blue-700 mt-0.5"></p>
             </div>
 
-            <!-- Payment Method Selection -->
             <div id="payment-methods">
                 <h3 class="font-semibold text-gray-700 mb-3">Select Payment Method (Secure Backend Required):</h3>
                 
-                <!-- Khalti Option -->
                 <button onclick="initiateKhaltiPayment()" class="w-full flex items-center justify-between p-4 mb-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors shadow-md">
                     <span class="font-bold">Pay with Khalti (Recommended)</span>
                     <i class="fas fa-wallet text-xl"></i>
                 </button>
 
-                <!-- Bank Transfer Option -->
                 <button onclick="handleBankTransfer()" class="w-full flex items-center justify-between p-4 mb-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-md">
                     <span class="font-bold">Bank Transfer (Manual)</span>
                     <i class="fas fa-university text-xl"></i>
                 </button>
             </div>
 
-            <!-- Close Button -->
             <div class="mt-6 flex justify-end">
                 <button onclick="closeModal('payment-modal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">Cancel</button>
             </div>
         </div>
     </div>
     
-    <!-- Bank Transfer Details Modal -->
     <div id="bank-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Bank Transfer Details (NPR 500.00)</h2>
@@ -108,11 +98,9 @@
         </div>
     </div>
 
-    <!-- Toast/Notification Area -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
 
-    <!-- Navigation -->
     <header class="bg-white shadow-md sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
             <div class="flex items-center space-x-2">
@@ -121,26 +109,22 @@
             </div>
             <nav class="flex items-center space-x-4">
                 <a href="#listings" class="text-gray-600 hover:text-blue-600 transition-colors font-medium">Home</a>
-                <button onclick="showModal('post-listing-modal')" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold shadow-md">
+                <button id="post-business-btn" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold shadow-md">
                     + Post My Business
                 </button>
             </nav>
         </div>
     </header>
 
-    <!-- Main Content Area -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Hero Section -->
         <div class="bg-blue-600 text-white p-8 rounded-xl shadow-lg mb-8">
             <h1 class="text-4xl sm:text-5xl font-extrabold mb-2">Discover Local Gems in Nepal</h1>
             <p class="text-xl font-light">Supporting local shops and restaurants, starting with Biratnagar.</p>
         </div>
 
-        <!-- Filter and Controls -->
         <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8 bg-white p-4 rounded-xl shadow-md">
             
-            <!-- City Filter -->
             <select id="city-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
                 <option value="all">All Cities (Nepal)</option>
                 <option value="biratnagar">Biratnagar</option>
@@ -149,7 +133,6 @@
                 <option value="dharan">Dharan</option>
             </select>
 
-            <!-- Category Filter -->
             <select id="category-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
                 <option value="all">All Categories</option>
                 <option value="restaurant">Restaurant</option>
@@ -158,21 +141,17 @@
                 <option value="hotel">Hotel/Stay</option>
             </select>
 
-            <!-- Search Bar -->
             <input type="text" id="search-input" oninput="filterListings()" placeholder="Search by name or description..." class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
         </div>
 
-        <!-- Listings Grid -->
         <div id="listings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Listings will be injected here by JavaScript -->
-        </div>
+            </div>
 
         <p id="no-results" class="text-center text-gray-500 mt-12 text-xl hidden">
             No businesses found matching your criteria.
         </p>
     </main>
 
-    <!-- Add/Post Listing Modal -->
     <div id="post-listing-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl m-4 transform transition-all p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Local Business</h2>
@@ -185,8 +164,8 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="city" class="block text-sm font-medium text-gray-700">City</label>
-                        <select id="city" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <label for="city-input" class="block text-sm font-medium text-gray-700">City</label>
+                        <select id="city-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Select City</option>
                             <option value="biratnagar">Biratnagar</option>
                             <option value="kathmandu">Kathmandu</option>
@@ -195,8 +174,8 @@
                         </select>
                     </div>
                     <div>
-                        <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
-                        <select id="category" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <label for="category-input" class="block text-sm font-medium text-gray-700">Category</label>
+                        <select id="category-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Select Category</option>
                             <option value="restaurant">Restaurant</option>
                             <option value="shop">Local Shop</option>
@@ -224,7 +203,6 @@
         </div>
     </div>
 
-    <!-- Review Modal -->
     <div id="review-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Review</h2>
@@ -234,8 +212,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Your Rating</label>
                     <div id="rating-stars" class="flex items-center space-x-1 mt-1 text-2xl text-gray-400">
-                        <!-- Stars will be generated by JS -->
-                    </div>
+                        </div>
                     <input type="hidden" id="review-rating" required value="0">
                 </div>
 
@@ -252,7 +229,6 @@
         </div>
     </div>
 
-    <!-- Firebase SDK Imports (Using type="module" for tree-shaking and modern SDKs) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
@@ -272,7 +248,7 @@
             storageBucket: "nepal-local-connect-1db0b.firebasestorage.app",
             messagingSenderId: "565343830775",
             appId: "1:565343830775:web:378d33a108df83ac4789f2",
-            measurementId: "G-FQ3W0NZ375"
+            measurementId: "G-FQ3W0NZ375" 
         };
         
         // Use the Project ID as the App ID for Firestore path convention
@@ -286,8 +262,7 @@
         // ----------------------------------------------------------------------
         const KHALTI_PUBLIC_KEY = 'test_public_key_63240f900e5746f3801f3b3952f4955c'; // Public key for client-side integration
         const KHALTI_VERIFY_ENDPOINT = 'https://a.secure.server/khalti-verify'; // Replace with your secure Firebase Function URL!
-        const KHALTI_TEST_GATEWAY = 'https://khalti.com/api/v2/payment/verify/'; // Official verification endpoint used by the secure backend
-
+        
         // Price in NPR (paisa) for the Top Chart feature (NPR 500.00)
         const FEATURE_PRICE_PAISA = 50000; 
 
@@ -357,23 +332,25 @@
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 
-                // Initialize Auth and force Anonymous Sign-in for immediate user ID
-                auth = getAuth(app);
+                // Define Auth immediately after app initialization
+                auth = getAuth(app); 
                 
                 document.getElementById('status-message').textContent = 'Signing in as guest user...';
+                
+                // FIX: Force immediate Anonymous Sign-in to resolve initialization hang on Netlify
                 const userCredential = await signInAnonymously(auth);
                 userId = userCredential.user.uid;
                 
+                
                 // Remove loading overlay and proceed to load data
                 document.getElementById('loading-overlay').classList.add('hidden');
-                document.getElementById('status-message').textContent = 'Database connection successful.';
                 
                 // Start listening to real-time data
                 setupRealtimeListener();
 
             } catch (error) {
                 console.error("Firebase Initialization Error:", error);
-                document.getElementById('status-message').textContent = `FATAL ERROR: Could not connect. Check console and Firebase settings. Error: ${error.code}`;
+                document.getElementById('status-message').textContent = `FATAL ERROR: Could not connect. Check console and Firebase settings. Error: ${error.code || error.message}`;
                 document.getElementById('loading-overlay').classList.remove('hidden'); // Keep overlay visible on error
             }
         }
@@ -414,8 +391,8 @@
             e.preventDefault();
             const newListing = {
                 name: document.getElementById('business-name').value,
-                city: document.getElementById('city').value.toLowerCase(),
-                category: document.getElementById('category').value.toLowerCase(),
+                city: document.getElementById('city-input').value.toLowerCase(),
+                category: document.getElementById('category-input').value.toLowerCase(),
                 address: document.getElementById('address').value,
                 description: document.getElementById('description').value,
                 ratingTotal: 0,
@@ -465,8 +442,8 @@
                         throw "Listing does not exist!";
                     }
                     
-                    const newRatingTotal = listingDoc.data().ratingTotal + rating;
-                    const newRatingCount = listingDoc.data().ratingCount + 1;
+                    const newRatingTotal = (listingDoc.data().ratingTotal || 0) + rating;
+                    const newRatingCount = (listingDoc.data().ratingCount || 0) + 1;
 
                     transaction.update(listingRef, {
                         ratingTotal: newRatingTotal,
@@ -600,12 +577,7 @@
             // Generate a unique transaction ID for security
             const transactionId = `T-${Date.now()}-${currentListingToFeature.id}`;
             const listingId = currentListingToFeature.id;
-            const amount = FEATURE_PRICE_PAISA; // 50000 paisa = NPR 500.00
-
-            // 1. Create a dynamic form to submit to the SECURE BACKEND ENDPOINT
-            // In the live scenario, this form data would be POSTed to your Firebase Function
-            // which would then generate a secure payment URL from Khalti's API.
-            // For this demo, we use the test public key and simulate the redirect.
+            const amount = FEATURE_PRICE_PAISA; 
 
             // The data required for the secure backend to generate the Khalti payment URL
             const paymentData = {
@@ -617,17 +589,14 @@
                 'public_key': KHALTI_PUBLIC_KEY // Public key is safe to be client-side
             };
 
-            // This is a SIMULATION: It simulates sending data to your secure backend (Firebase Function)
-            // which would then give you the actual Khalti URL.
-            // For simplicity, we assume the backend validates this, generates a URL, and redirects.
-            // The user is redirected to a simulated Khalti page.
-            
+            // This is a SIMULATION: It redirects the user to the Khalti gateway.
             showToast('Redirecting to Khalti for secure payment...', 'info');
             closeModal('payment-modal');
 
-            // --- IMPORTANT: This is the client-side redirect to the secure verification step ---
-            window.location.href = `${KHALTI_VERIFY_ENDPOINT}?data=${btoa(JSON.stringify(paymentData))}`;
-            // NOTE: In a real implementation, KHALTI_VERIFY_ENDPOINT would be your Firebase Function URL
+            // --- IMPORTANT: This redirects to the secure verification step ---
+            // In a real app, you would POST this to your Firebase Function which then redirects to Khalti.
+            window.location.href = `https://khalti.com/api/v2/payment/initiate/?${new URLSearchParams(paymentData).toString()}`;
+            // If the user completes the payment, Khalti redirects them back to the return_url, triggering checkPaymentStatus().
         }
 
 
@@ -635,12 +604,11 @@
         function handleBankTransfer() {
             if (!currentListingToFeature) return;
             document.getElementById('bank-listing-id').textContent = `Your Listing ID: ${currentListingToFeature.id}`;
+            closeModal('payment-modal');
             showModal('bank-modal');
         }
 
         // --- Transaction Verification (SIMULATED SECURE BACKEND) ---
-        // This function represents the logic of your secure server (Firebase Function)
-        // when the user is redirected back from Khalti.
         
         async function checkPaymentStatus() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -654,16 +622,13 @@
                 
                 showToast('Payment initiated. Waiting for secure verification...', 'info');
 
-                // 2. SIMULATE SECURE VERIFICATION (This should happen on your Firebase Function!)
-                // The Khalti Verification Guide: server_guide.md has the real Node.js code.
+                // --- SIMULATED SERVER VERIFICATION START ---
+                // NOTE: This logic MUST be moved to a Firebase Function in production!
                 
                 try {
                     // Simulate a delay for server processing and Khalti API call
                     await new Promise(resolve => setTimeout(resolve, 3000)); 
 
-                    // SIMULATION: If the server confirms payment, it updates the Firestore directly.
-                    // Since we can't run the server code, we simulate a successful verification.
-                    
                     const listingRef = doc(getPublicListingsCollection(), listingId);
                     await updateDoc(listingRef, {
                         is_featured: true,
@@ -677,6 +642,7 @@
                     showToast('Secure verification failed. Please contact support.', 'error');
                     console.error("Simulated Server Verification Error:", error);
                 }
+                // --- SIMULATED SERVER VERIFICATION END ---
             } else if (status === 'failed') {
                 // Khalti redirects back with status=failed if user cancels
                 history.replaceState({}, document.title, window.location.pathname);
@@ -686,16 +652,27 @@
 
         // --- Startup ---
 
-        window.onload = function() {
+        document.addEventListener('DOMContentLoaded', () => {
             // Set debug log level for development/troubleshooting
             setLogLevel('debug'); 
             
+            // 1. Initialize Firebase and Authentication
             initFirebase();
-            checkPaymentStatus();
             
-            // Initial render call (will be overwritten by snapshot later)
+            // 2. Check for payment redirects immediately
+            checkPaymentStatus();
+
+            // 3. Fix for Post My Business button issue: Attach event listener after DOM is ready
+            const postBtn = document.getElementById('post-business-btn');
+            if (postBtn) {
+                postBtn.addEventListener('click', () => {
+                    showModal('post-listing-modal');
+                });
+            }
+            
+            // Initial render of stars (default to 0)
             renderRatingStars(0); 
-        };
+        });
 
     </script>
 </body>
