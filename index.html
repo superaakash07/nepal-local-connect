@@ -316,6 +316,58 @@
         </p>
     </main>
 
+    <!-- Add/Post Listing Modal -->
+    <div id="post-listing-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl m-4 transform transition-all p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Local Business</h2>
+            <form id="listing-form" class="space-y-4">
+                
+                <div>
+                    <label for="business-name" class="block text-sm font-medium text-gray-700">Business Name</label>
+                    <input type="text" id="business-name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="city-input" class="block text-sm font-medium text-gray-700">City</label>
+                        <select id="city-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select City</option>
+                            <option value="biratnagar">Biratnagar</option>
+                            <option value="kathmandu">Kathmandu</option>
+                            <option value="pokhara">Pokhara</option>
+                            <option value="dharan">Dharan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="category-input" class="block text-sm font-medium text-gray-700">Category</label>
+                        <select id="category-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select Category</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="shop">Local Shop</option>
+                            <option value="service">Service</option>
+                            <option value="hotel">Hotel/Stay</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700">Physical Address / Landmark</label>
+                    <input type="text" id="address" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description (What makes you unique?)</label>
+                    <textarea id="description" rows="3" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('post-listing-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Review Modal -->
     <div id="review-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
@@ -343,6 +395,442 @@
             </form>
         </div>
     </div>
+
+    <!-- Toast/Notification Area -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+
+    <!-- Navigation -->
+    <header class="bg-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-map-marker-alt text-2xl text-blue-600"></i>
+                <a href="/" class="text-2xl font-extrabold text-gray-900">NP Local Connect</a>
+            </div>
+            <nav class="flex items-center space-x-4">
+                <a href="#listings" class="text-gray-600 hover:text-blue-600 transition-colors font-medium">Home</a>
+                <button id="post-business-btn" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold shadow-md">
+                    + Post My Business
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Hero Section -->
+        <div class="bg-blue-600 text-white p-8 rounded-xl shadow-lg mb-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold mb-2">Discover Local Gems in Nepal</h1>
+            <p class="text-xl font-light">Supporting local shops and restaurants, starting with Biratnagar.</p>
+        </div>
+
+        <!-- Filter and Controls -->
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8 bg-white p-4 rounded-xl shadow-md">
+            
+            <!-- City Filter -->
+            <select id="city-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                <option value="all">All Cities (Nepal)</option>
+                <option value="biratnagar">Biratnagar</option>
+                <option value="kathmandu">Kathmandu</option>
+                <option value="pokhara">Pokhara</option>
+                <option value="dharan">Dharan</option>
+            </select>
+
+            <!-- Category Filter -->
+            <select id="category-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                <option value="all">All Categories</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="shop">Local Shop</option>
+                <option value="service">Service</option>
+                <option value="hotel">Hotel/Stay</option>
+            </select>
+
+            <!-- Search Bar -->
+            <input type="text" id="search-input" oninput="filterListings()" placeholder="Search by name or description..." class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+        </div>
+
+        <!-- Listings Grid -->
+        <div id="listings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Listings will be injected here by JavaScript -->
+        </div>
+
+        <p id="no-results" class="text-center text-gray-500 mt-12 text-xl hidden">
+            No businesses found matching your criteria.
+        </p>
+    </main>
+
+    <!-- Add/Post Listing Modal -->
+    <div id="post-listing-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl m-4 transform transition-all p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Local Business</h2>
+            <form id="listing-form" class="space-y-4">
+                
+                <div>
+                    <label for="business-name" class="block text-sm font-medium text-gray-700">Business Name</label>
+                    <input type="text" id="business-name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="city-input" class="block text-sm font-medium text-gray-700">City</label>
+                        <select id="city-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select City</option>
+                            <option value="biratnagar">Biratnagar</option>
+                            <option value="kathmandu">Kathmandu</option>
+                            <option value="pokhara">Pokhara</option>
+                            <option value="dharan">Dharan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="category-input" class="block text-sm font-medium text-gray-700">Category</label>
+                        <select id="category-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select Category</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="shop">Local Shop</option>
+                            <option value="service">Service</option>
+                            <option value="hotel">Hotel/Stay</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700">Physical Address / Landmark</label>
+                    <input type="text" id="address" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description (What makes you unique?)</label>
+                    <textarea id="description" rows="3" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('post-listing-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="review-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Review</h2>
+            <div id="review-listing-info" class="mb-4 text-gray-700 font-medium"></div>
+            <form id="review-form" class="space-y-4">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Your Rating</label>
+                    <div id="rating-stars" class="flex items-center space-x-1 mt-1 text-2xl text-gray-400">
+                        <!-- Stars will be generated by JS -->
+                    </div>
+                    <input type="hidden" id="review-rating" required value="0">
+                </div>
+
+                <div>
+                    <label for="review-text" class="block text-sm font-medium text-gray-700">Your Comments</label>
+                    <textarea id="review-text" rows="4" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('review-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast/Notification Area -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+
+    <!-- Navigation -->
+    <header class="bg-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-map-marker-alt text-2xl text-blue-600"></i>
+                <a href="/" class="text-2xl font-extrabold text-gray-900">NP Local Connect</a>
+            </div>
+            <nav class="flex items-center space-x-4">
+                <a href="#listings" class="text-gray-600 hover:text-blue-600 transition-colors font-medium">Home</a>
+                <button id="post-business-btn" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold shadow-md">
+                    + Post My Business
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Hero Section -->
+        <div class="bg-blue-600 text-white p-8 rounded-xl shadow-lg mb-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold mb-2">Discover Local Gems in Nepal</h1>
+            <p class="text-xl font-light">Supporting local shops and restaurants, starting with Biratnagar.</p>
+        </div>
+
+        <!-- Filter and Controls -->
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8 bg-white p-4 rounded-xl shadow-md">
+            
+            <!-- City Filter -->
+            <select id="city-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                <option value="all">All Cities (Nepal)</option>
+                <option value="biratnagar">Biratnagar</option>
+                <option value="kathmandu">Kathmandu</option>
+                <option value="pokhara">Pokhara</option>
+                <option value="dharan">Dharan</option>
+            </select>
+
+            <!-- Category Filter -->
+            <select id="category-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                <option value="all">All Categories</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="shop">Local Shop</option>
+                <option value="service">Service</option>
+                <option value="hotel">Hotel/Stay</option>
+            </select>
+
+            <!-- Search Bar -->
+            <input type="text" id="search-input" oninput="filterListings()" placeholder="Search by name or description..." class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+        </div>
+
+        <!-- Listings Grid -->
+        <div id="listings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Listings will be injected here by JavaScript -->
+        </div>
+
+        <p id="no-results" class="text-center text-gray-500 mt-12 text-xl hidden">
+            No businesses found matching your criteria.
+        </p>
+    </main>
+
+    <!-- Add/Post Listing Modal -->
+    <div id="post-listing-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl m-4 transform transition-all p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Local Business</h2>
+            <form id="listing-form" class="space-y-4">
+                
+                <div>
+                    <label for="business-name" class="block text-sm font-medium text-gray-700">Business Name</label>
+                    <input type="text" id="business-name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="city-input" class="block text-sm font-medium text-gray-700">City</label>
+                        <select id="city-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select City</option>
+                            <option value="biratnagar">Biratnagar</option>
+                            <option value="kathmandu">Kathmandu</option>
+                            <option value="pokhara">Pokhara</option>
+                            <option value="dharan">Dharan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="category-input" class="block text-sm font-medium text-gray-700">Category</label>
+                        <select id="category-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select Category</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="shop">Local Shop</option>
+                            <option value="service">Service</option>
+                            <option value="hotel">Hotel/Stay</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700">Physical Address / Landmark</label>
+                    <input type="text" id="address" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description (What makes you unique?)</label>
+                    <textarea id="description" rows="3" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('post-listing-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="review-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Review</h2>
+            <div id="review-listing-info" class="mb-4 text-gray-700 font-medium"></div>
+            <form id="review-form" class="space-y-4">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Your Rating</label>
+                    <div id="rating-stars" class="flex items-center space-x-1 mt-1 text-2xl text-gray-400">
+                        <!-- Stars will be generated by JS -->
+                    </div>
+                    <input type="hidden" id="review-rating" required value="0">
+                </div>
+
+                <div>
+                    <label for="review-text" class="block text-sm font-medium text-gray-700">Your Comments</label>
+                    <textarea id="review-text" rows="4" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('review-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast/Notification Area -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+
+    <!-- Navigation -->
+    <header class="bg-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-map-marker-alt text-2xl text-blue-600"></i>
+                <a href="/" class="text-2xl font-extrabold text-gray-900">NP Local Connect</a>
+            </div>
+            <nav class="flex items-center space-x-4">
+                <a href="#listings" class="text-gray-600 hover:text-blue-600 transition-colors font-medium">Home</a>
+                <button id="post-business-btn" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold shadow-md">
+                    + Post My Business
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Hero Section -->
+        <div class="bg-blue-600 text-white p-8 rounded-xl shadow-lg mb-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold mb-2">Discover Local Gems in Nepal</h1>
+            <p class="text-xl font-light">Supporting local shops and restaurants, starting with Biratnagar.</p>
+        </div>
+
+        <!-- Filter and Controls -->
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8 bg-white p-4 rounded-xl shadow-md">
+            
+            <!-- City Filter -->
+            <select id="city-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                <option value="all">All Cities (Nepal)</option>
+                <option value="biratnagar">Biratnagar</option>
+                <option value="kathmandu">Kathmandu</option>
+                <option value="pokhara">Pokhara</option>
+                <option value="dharan">Dharan</option>
+            </select>
+
+            <!-- Category Filter -->
+            <select id="category-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                <option value="all">All Categories</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="shop">Local Shop</option>
+                <option value="service">Service</option>
+                <option value="hotel">Hotel/Stay</option>
+            </select>
+
+            <!-- Search Bar -->
+            <input type="text" id="search-input" oninput="filterListings()" placeholder="Search by name or description..." class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+        </div>
+
+        <!-- Listings Grid -->
+        <div id="listings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Listings will be injected here by JavaScript -->
+        </div>
+
+        <p id="no-results" class="text-center text-gray-500 mt-12 text-xl hidden">
+            No businesses found matching your criteria.
+        </p>
+    </main>
+
+    <!-- Add/Post Listing Modal -->
+    <div id="post-listing-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl m-4 transform transition-all p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Local Business</h2>
+            <form id="listing-form" class="space-y-4">
+                
+                <div>
+                    <label for="business-name" class="block text-sm font-medium text-gray-700">Business Name</label>
+                    <input type="text" id="business-name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="city-input" class="block text-sm font-medium text-gray-700">City</label>
+                        <select id="city-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select City</option>
+                            <option value="biratnagar">Biratnagar</option>
+                            <option value="kathmandu">Kathmandu</option>
+                            <option value="pokhara">Pokhara</option>
+                            <option value="dharan">Dharan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="category-input" class="block text-sm font-medium text-gray-700">Category</label>
+                        <select id="category-input" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select Category</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="shop">Local Shop</option>
+                            <option value="service">Service</option>
+                            <option value="hotel">Hotel/Stay</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700">Physical Address / Landmark</label>
+                    <input type="text" id="address" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description (What makes you unique?)</label>
+                    <textarea id="description" rows="3" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('post-listing-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="review-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Review</h2>
+            <div id="review-listing-info" class="mb-4 text-gray-700 font-medium"></div>
+            <form id="review-form" class="space-y-4">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Your Rating</label>
+                    <div id="rating-stars" class="flex items-center space-x-1 mt-1 text-2xl text-gray-400">
+                        <!-- Stars will be generated by JS -->
+                    </div>
+                    <input type="hidden" id="review-rating" required value="0">
+                </div>
+
+                <div>
+                    <label for="review-text" class="block text-sm font-medium text-gray-700">Your Comments</label>
+                    <textarea id="review-text" rows="4" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('review-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast/Notification Area -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
 
     <!-- Firebase SDK Imports (Using type="module" for tree-shaking and modern SDKs) -->
     <script type="module">
@@ -372,9 +860,6 @@
 
         // ----------------------------------------------------------------------
         // *** 2. KHALTI PAYMENT CONFIGURATION (TEST KEYS) ***
-        //
-        // You MUST replace these test keys with your official merchant keys.
-        // The Khalti Secret Key MUST NEVER be exposed on the frontend in a live app.
         // ----------------------------------------------------------------------
         const KHALTI_PUBLIC_KEY = 'test_public_key_63240f900e5746f3801f3b3952f4955c'; // Public key for client-side integration
         const KHALTI_VERIFY_ENDPOINT = 'https://a.secure.server/khalti-verify'; // Replace with your secure Firebase Function URL!
@@ -412,6 +897,7 @@
         function showModal(id, listingId = null) {
             const modal = document.getElementById(id);
             if (modal) {
+                // Simplified modal display
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
             }
@@ -434,6 +920,7 @@
         function closeModal(id) {
             const modal = document.getElementById(id);
             if (modal) {
+                // Simplified modal hide
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
             }
@@ -570,7 +1057,7 @@
                     });
                 });
 
-                showToast('Review submitted! Thank yourself for your feedback.');
+                showToast('Review submitted! Thank you for your feedback.');
                 closeModal('review-modal');
                 e.target.reset();
                 currentListingIdToReview = null;
