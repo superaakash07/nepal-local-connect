@@ -3,35 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nepal Local Connect - Promote Local Businesses</title>
+    <title>Nepal Local Connect - Local Business Directory</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome CDN (Updated Link) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMD/CDQ6RzYxVvP6xqqs0cW7RjrjT2h/P27wJ0l7/J2s9e+2iYfB0y4L1Zt1t5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
-        .featured-card {
-            border: 3px solid #FF5722; /* Deep Orange for featured */
-            box-shadow: 0 10px 15px -3px rgba(255, 87, 34, 0.4), 0 4px 6px -2px rgba(255, 87, 34, 0.2);
-            animation: pulse-featured 2s infinite;
+        /* Custom scrollbar for better aesthetics */
+        body::-webkit-scrollbar {
+            width: 8px;
         }
-        @keyframes pulse-featured {
-            0%, 100% { transform: scale(1.0); }
-            50% { transform: scale(1.01); }
+        body::-webkit-scrollbar-thumb {
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            border-radius: 4px;
         }
-        .rating-star { color: #FFD700; } /* Gold color for ratings */
+        .listing-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .listing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        /* Mobile-friendly map embedding */
+        .map-container {
+            height: 200px;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 0.5rem;
+        }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="bg-gray-50 min-h-screen font-sans">
 
-    <!-- Header -->
-    <header class="bg-blue-600 shadow-lg sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <h1 class="text-3xl font-bold text-white tracking-tight">
-                🇳🇵 Local Connect Nepal
-            </h1>
-            <nav class="flex space-x-4">
-                <button onclick="changeView('home')" class="text-white hover:text-blue-200 transition duration-150 font-medium">Home</button>
-                <button onclick="changeView('submit')" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-150 shadow-md">
+    <!-- Loading/Status Indicator Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
+        <div class="text-center p-6 bg-white rounded-lg shadow-xl">
+            <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p id="status-message" class="mt-4 text-gray-700 font-medium">Initializing app and connecting to database...</p>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 transform transition-all p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Upgrade to Top Chart Listing</h2>
+            <p class="text-sm text-gray-600 mb-6">
+                Place your business at the top of search results for 30 days to maximize visibility.
+                <span class="font-semibold text-blue-600">Price: NPR 500.00.</span>
+            </p>
+
+            <!-- Current Listing Details -->
+            <div id="payment-listing-details" class="bg-blue-50 p-3 rounded-lg mb-6 border border-blue-200 text-sm">
+                <p class="font-medium text-blue-800">Target Listing:</p>
+                <p id="modal-listing-name" class="font-bold text-lg text-blue-900 mt-1"></p>
+                <p id="modal-listing-id" class="text-xs text-blue-700 mt-0.5"></p>
+            </div>
+
+            <!-- Payment Method Selection -->
+            <div id="payment-methods">
+                <h3 class="font-semibold text-gray-700 mb-3">Select Payment Method (Secure Backend Required):</h3>
+                
+                <!-- Khalti Option -->
+                <button onclick="initiateKhaltiPayment()" class="w-full flex items-center justify-between p-4 mb-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors shadow-md">
+                    <span class="font-bold">Pay with Khalti (Recommended)</span>
+                    <i class="fas fa-wallet text-xl"></i>
+                </button>
+
+                <!-- Bank Transfer Option -->
+                <button onclick="handleBankTransfer()" class="w-full flex items-center justify-between p-4 mb-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-md">
+                    <span class="font-bold">Bank Transfer (Manual)</span>
+                    <i class="fas fa-university text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Close Button -->
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeModal('payment-modal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bank Transfer Details Modal -->
+    <div id="bank-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Bank Transfer Details (NPR 500.00)</h2>
+            <div class="space-y-4 text-gray-700">
+                <p>Please transfer **NPR 500.00** to the account below and include your Listing ID in the remarks.</p>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <p><strong>Bank Name:</strong> Rastriya Banijya Bank</p>
+                    <p><strong>Account Name:</strong> Nepal Local Connect</p>
+                    <p><strong>Account No:</strong> 1234567890</p>
+                    <p id="bank-listing-id"><strong>Your Listing ID:</strong> </p>
+                </div>
+                <p class="text-red-600 font-semibold">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Your listing will only be upgraded after manual verification of payment.
+                </p>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeModal('bank-modal'); closeModal('payment-modal');" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">I Understand</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast/Notification Area -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+
+    <!-- Navigation -->
+    <header class="bg-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-map-marker-alt text-2xl text-blue-600"></i>
+                <a href="/" class="text-2xl font-extrabold text-gray-900">NP Local Connect</a>
+            </div>
+            <nav class="flex items-center space-x-4">
+                <a href="#listings" class="text-gray-600 hover:text-blue-600 transition-colors font-medium">Home</a>
+                <button onclick="showModal('post-listing-modal')" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold shadow-md">
                     + Post My Business
                 </button>
             </nav>
@@ -39,656 +129,574 @@
     </header>
 
     <!-- Main Content Area -->
-    <main id="app-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-        <!-- Content will be rendered here by JavaScript -->
-        <div class="text-center py-20">
-            <p id="loading-message" class="text-xl text-gray-500">Initializing app and connecting to database...</p>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Hero Section -->
+        <div class="bg-blue-600 text-white p-8 rounded-xl shadow-lg mb-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold mb-2">Discover Local Gems in Nepal</h1>
+            <p class="text-xl font-light">Supporting local shops and restaurants, starting with Biratnagar.</p>
         </div>
+
+        <!-- Filter and Controls -->
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8 bg-white p-4 rounded-xl shadow-md">
+            
+            <!-- City Filter -->
+            <select id="city-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                <option value="all">All Cities (Nepal)</option>
+                <option value="biratnagar">Biratnagar</option>
+                <option value="kathmandu">Kathmandu</option>
+                <option value="pokhara">Pokhara</option>
+                <option value="dharan">Dharan</option>
+            </select>
+
+            <!-- Category Filter -->
+            <select id="category-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                <option value="all">All Categories</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="shop">Local Shop</option>
+                <option value="service">Service</option>
+                <option value="hotel">Hotel/Stay</option>
+            </select>
+
+            <!-- Search Bar -->
+            <input type="text" id="search-input" oninput="filterListings()" placeholder="Search by name or description..." class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+        </div>
+
+        <!-- Listings Grid -->
+        <div id="listings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Listings will be injected here by JavaScript -->
+        </div>
+
+        <p id="no-results" class="text-center text-gray-500 mt-12 text-xl hidden">
+            No businesses found matching your criteria.
+        </p>
     </main>
 
-    <!-- Modal for Messages/Prompts (used instead of alert/confirm) -->
-    <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300">
-            <!-- Modal Content will be dynamically inserted here -->
-            <div id="modal-content-wrapper">
-                <h3 id="modal-title" class="text-xl font-bold mb-3 text-blue-600"></h3>
-                <p id="modal-message" class="text-gray-700 mb-6"></p>
-                <div class="flex justify-end space-x-4">
-                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">Close</button>
-                    <button id="modal-confirm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition hidden">Confirm</button>
+    <!-- Add/Post Listing Modal -->
+    <div id="post-listing-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl m-4 transform transition-all p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Local Business</h2>
+            <form id="listing-form" class="space-y-4">
+                
+                <div>
+                    <label for="business-name" class="block text-sm font-medium text-gray-700">Business Name</label>
+                    <input type="text" id="business-name" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
-            </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="city" class="block text-sm font-medium text-gray-700">City</label>
+                        <select id="city" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select City</option>
+                            <option value="biratnagar">Biratnagar</option>
+                            <option value="kathmandu">Kathmandu</option>
+                            <option value="pokhara">Pokhara</option>
+                            <option value="dharan">Dharan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                        <select id="category" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select Category</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="shop">Local Shop</option>
+                            <option value="service">Service</option>
+                            <option value="hotel">Hotel/Stay</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700">Physical Address / Landmark</label>
+                    <input type="text" id="address" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description (What makes you unique?)</label>
+                    <textarea id="description" rows="3" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('post-listing-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Listing</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Firebase Imports and Setup -->
+    <!-- Review Modal -->
+    <div id="review-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Review</h2>
+            <div id="review-listing-info" class="mb-4 text-gray-700 font-medium"></div>
+            <form id="review-form" class="space-y-4">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Your Rating</label>
+                    <div id="rating-stars" class="flex items-center space-x-1 mt-1 text-2xl text-gray-400">
+                        <!-- Stars will be generated by JS -->
+                    </div>
+                    <input type="hidden" id="review-rating" required value="0">
+                </div>
+
+                <div>
+                    <label for="review-text" class="block text-sm font-medium text-gray-700">Your Comments</label>
+                    <textarea id="review-text" rows="4" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('review-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Imports (Using type="module" for tree-shaking and modern SDKs) -->
     <script type="module">
-        // --- Firebase SDK Imports (UPDATED TO 12.5.0) ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, orderBy, getDocs, runTransaction, arrayUnion, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+        import { getFirestore, doc, collection, query, onSnapshot, addDoc, updateDoc, increment, runTransaction, setDoc, where } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
         // ----------------------------------------------------------------------
-        // *** 1. FIREBASE CONFIGURATION (NOW USING YOUR ACTUAL KEYS) ***
+        // *** 1. FIREBASE CONFIGURATION (REQUIRED) ***
+        //
+        // These keys MUST match your setup in the Firebase Console.
         // ----------------------------------------------------------------------
         const firebaseConfig = {
-             apiKey: "AIzaSyCb7_taMV62JFVjUV1ikmukjg2KMOHkrAI",
-             authDomain: "nepal-local-connect-1db0b.firebaseapp.com",
-             projectId: "nepal-local-connect-1db0b",
-             storageBucket: "nepal-local-connect-1db0b.firebasestorage.app",
-             messagingSenderId: "565343830775",
-             appId: "1:565343830775:web:378d33a108df83ac4789f2",
-             measurementId: "G-FQ3W0NZ375" // Added measurementId for completeness
+            // These keys are based on the configuration the user provided earlier
+            apiKey: "AIzaSyCb7_taMV62JFVjUV1ikmukjg2KMOHkrAI",
+            authDomain: "nepal-local-connect-1db0b.firebaseapp.com",
+            projectId: "nepal-local-connect-1db0b",
+            storageBucket: "nepal-local-connect-1db0b.firebasestorage.app",
+            messagingSenderId: "565343830775",
+            appId: "1:565343830775:web:378d33a108df83ac4789f2",
+            measurementId: "G-FQ3W0NZ375"
         };
         
-        // Use projectId as the appId for Firestore paths
-        const appId = firebaseConfig.projectId; 
+        // Use the Project ID as the App ID for Firestore path convention
+        const appId = firebaseConfig.projectId;
 
-        // The authentication token is only available in the editor environment.
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         // ----------------------------------------------------------------------
+        // *** 2. KHALTI PAYMENT CONFIGURATION (TEST KEYS) ***
+        //
+        // You MUST replace these test keys with your official merchant keys.
+        // The Khalti Secret Key MUST NEVER be exposed on the frontend in a live app.
+        // ----------------------------------------------------------------------
+        const KHALTI_PUBLIC_KEY = 'test_public_key_63240f900e5746f3801f3b3952f4955c'; // Public key for client-side integration
+        const KHALTI_VERIFY_ENDPOINT = 'https://a.secure.server/khalti-verify'; // Replace with your secure Firebase Function URL!
+        const KHALTI_TEST_GATEWAY = 'https://khalti.com/api/v2/payment/verify/'; // Official verification endpoint used by the secure backend
 
+        // Price in NPR (paisa) for the Top Chart feature (NPR 500.00)
+        const FEATURE_PRICE_PAISA = 50000; 
 
-        // --- Payment Configuration ---
-        // NOTE: In a real app, Khalti's Secret Key (API Key) MUST be stored securely on your server.
-        const KHALTI_PUBLIC_KEY = "TEST_PUBLIC_KEY"; // Placeholder for Khalti Public Key
-        const FEATURE_PRICE_NPR = 5000;
-        const FEATURE_DURATION_DAYS = 30;
-        // --- End Payment Configuration ---
-
-        let app;
-        let db;
-        let auth;
-        let userId = 'anon';
-        let listings = [];
-        let currentPage = 'home';
-        let currentFilter = { city: 'All', category: 'All' };
+        // Global Firebase variables
+        let app, db, auth, userId;
+        let allListings = [];
+        let currentListingIdToReview = null;
+        let currentListingToFeature = null;
 
         // --- Utility Functions ---
 
-        /** Shows a custom modal message instead of using alert() */
-        window.showModal = (title, message, confirmCallback = null, confirmText = "Confirm") => {
-            const modalContentWrapper = document.getElementById('modal-content-wrapper');
-            modalContentWrapper.innerHTML = `
-                <h3 id="modal-title" class="text-xl font-bold mb-3 text-blue-600">${title}</h3>
-                <p id="modal-message" class="text-gray-700 mb-6">${message}</p>
-                <div class="flex justify-end space-x-4">
-                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">Close</button>
-                    <button id="modal-confirm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition hidden">${confirmText}</button>
-                </div>
-            `;
+        // Simple Toast Notification
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
             
-            const confirmButton = document.getElementById('modal-confirm');
-            const modal = document.getElementById('modal');
+            let color = type === 'error' ? 'bg-red-500' : type === 'info' ? 'bg-blue-500' : 'bg-green-500';
             
-            if (confirmCallback) {
-                confirmButton.classList.remove('hidden');
-                confirmButton.onclick = () => {
-                    closeModal();
-                    confirmCallback();
-                };
-            } else {
-                confirmButton.classList.add('hidden');
+            toast.className = `p-4 rounded-lg shadow-xl text-white font-medium ${color} transition-opacity duration-300`;
+            toast.textContent = message;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 5000);
+        }
+
+        // Modal Handlers
+        function showModal(id, listingId = null) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
             }
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        };
+            if (listingId && id === 'payment-modal') {
+                const listing = allListings.find(l => l.id === listingId);
+                if (listing) {
+                    currentListingToFeature = listing;
+                    document.getElementById('modal-listing-name').textContent = listing.name;
+                    document.getElementById('modal-listing-id').textContent = `ID: ${listingId}`;
+                }
+            }
+            if (listingId && id === 'review-modal') {
+                currentListingIdToReview = listingId;
+                const listing = allListings.find(l => l.id === listingId);
+                document.getElementById('review-listing-info').textContent = `Reviewing: ${listing ? listing.name : 'Business'}`;
+                renderRatingStars(0);
+            }
+        }
 
-        /** Closes the custom modal */
-        window.closeModal = () => {
-            const modal = document.getElementById('modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            // Reset to default wrapper for future generic modals
-            document.querySelector('#modal > div').innerHTML = `<div id="modal-content-wrapper"><h3 id="modal-title" class="text-xl font-bold mb-3 text-blue-600"></h3><p id="modal-message" class="text-gray-700 mb-6"></p><div class="flex justify-end space-x-4"><button onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">Close</button><button id="modal-confirm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition hidden">Confirm</button></div></div>`;
-        };
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
 
-        /** Switches the application view */
-        window.changeView = (view) => {
-            currentPage = view;
-            renderApp();
-        };
-        
-        // --- Firebase Initialization and Auth ---
+        // --- Firebase Initialization and Authentication ---
 
         async function initFirebase() {
+            document.getElementById('status-message').textContent = 'Initializing Firebase services...';
             try {
-                // Initialize the app and Firestore immediately
+                // Initialize App
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 
-                // Define Auth immediately after app initialization
-                auth = getAuth(app); 
+                // Initialize Auth and force Anonymous Sign-in for immediate user ID
+                auth = getAuth(app);
                 
-                // Start listening to auth state changes and sign in if needed
-                await new Promise((resolve) => {
-                    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-                        if (user) {
-                            userId = user.uid;
-                        } else {
-                            // FIX: Simplify authentication flow for Netlify deployment
-                            // Only use custom token if available (original editor environment)
-                            if (initialAuthToken) {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                            } else {
-                                // Default to anonymous sign-in for live/guest users
-                                await signInAnonymously(auth);
-                            }
-                            userId = auth.currentUser.uid;
-                        }
-                        unsubscribe(); 
-                        resolve();
-                    });
-                });
-
-                startListeningToData();
-                renderApp();
+                document.getElementById('status-message').textContent = 'Signing in as guest user...';
+                const userCredential = await signInAnonymously(auth);
+                userId = userCredential.user.uid;
+                
+                // Remove loading overlay and proceed to load data
+                document.getElementById('loading-overlay').classList.add('hidden');
+                document.getElementById('status-message').textContent = 'Database connection successful.';
+                
+                // Start listening to real-time data
+                setupRealtimeListener();
 
             } catch (error) {
-                console.error("Firebase initialization failed:", error);
-                document.getElementById('loading-message').textContent = `ERROR: Firebase initialization failed. Check console for details. ${error.message}`;
+                console.error("Firebase Initialization Error:", error);
+                document.getElementById('status-message').textContent = `FATAL ERROR: Could not connect. Check console and Firebase settings. Error: ${error.code}`;
+                document.getElementById('loading-overlay').classList.remove('hidden'); // Keep overlay visible on error
             }
         }
 
-        // --- Firestore Data Management (Listings, Reviews) ---
+        // --- Firestore Operations ---
 
-        /** Starts real-time listener for listings data */
-        function startListeningToData() {
-            const listingsCollectionRef = collection(db, `artifacts/${appId}/public/data/listings`);
+        // Path helpers based on the security rules
+        const getPublicListingsCollection = () => collection(db, `artifacts/${appId}/public/data/listings`);
 
-            onSnapshot(listingsCollectionRef, (snapshot) => {
-                const fetchedListings = [];
-                snapshot.forEach(doc => {
+        // Real-time listener for all listings
+        function setupRealtimeListener() {
+            const q = query(getPublicListingsCollection());
+
+            onSnapshot(q, (snapshot) => {
+                allListings = [];
+                snapshot.forEach((doc) => {
                     const data = doc.data();
-                    // Ensure reviews is an array (or default to empty)
-                    if (data.reviews && data.reviews.length > 0) {
-                        const totalRating = data.reviews.reduce((sum, r) => sum + r.rating, 0);
-                        data.avgRating = (totalRating / data.reviews.length).toFixed(1);
-                        data.reviewCount = data.reviews.length;
-                    } else {
-                        data.avgRating = 'N/A';
-                        data.reviewCount = 0;
-                    }
-                    fetchedListings.push({ id: doc.id, ...data });
+                    // Ensure ratings are correctly formatted
+                    const avgRating = data.ratingCount > 0 ? (data.ratingTotal / data.ratingCount) : 0;
+                    allListings.push({
+                        id: doc.id,
+                        ...data,
+                        avgRating: avgRating.toFixed(1),
+                        is_featured: data.is_featured || false,
+                    });
                 });
-
-                // Sort: Featured first, then by highest average rating
-                fetchedListings.sort((a, b) => {
-                    // Check if current date is past featured_until (basic client-side expiry simulation)
-                    const now = Date.now();
-                    if (a.is_featured && new Date(a.featured_until).getTime() < now) a.is_featured = false;
-                    if (b.is_featured && new Date(b.featured_until).getTime() < now) b.is_featured = false;
-                    
-                    if (a.is_featured && !b.is_featured) return -1;
-                    if (!a.is_featured && b.is_featured) return 1;
-                    
-                    const ratingA = parseFloat(a.avgRating) || 0;
-                    const ratingB = parseFloat(b.avgRating) || 0;
-                    return ratingB - ratingA;
-                });
-
-                listings = fetchedListings;
-                renderApp(); // Re-render whenever data changes
+                
+                // Process and filter the updated list
+                filterListings();
             }, (error) => {
-                console.error("Error listening to listings:", error);
-                showModal("Data Error", "Could not load business listings in real-time. Please check your connection.");
+                showToast(`Error fetching data: ${error.message}`, 'error');
+                console.error("Firestore Listener Error:", error);
             });
         }
 
-        // ... submitListing and submitReview functions remain the same as previous versions ...
-
-        window.submitListing = async (event) => {
-            event.preventDefault();
-            const form = event.target;
+        // Save a new listing
+        document.getElementById('listing-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
             const newListing = {
-                name: form.name.value,
-                city: form.city.value,
-                category: form.category.value,
-                description: form.description.value,
-                address: form.address.value,
-                phone: form.phone.value,
-                ownerId: userId,
-                is_featured: false, // Default to false
-                reviews: [],
-                createdAt: serverTimestamp()
+                name: document.getElementById('business-name').value,
+                city: document.getElementById('city').value.toLowerCase(),
+                category: document.getElementById('category').value.toLowerCase(),
+                address: document.getElementById('address').value,
+                description: document.getElementById('description').value,
+                ratingTotal: 0,
+                ratingCount: 0,
+                is_featured: false,
+                created_by: userId,
+                created_at: new Date(),
             };
 
-            if (!newListing.name || !newListing.city || !newListing.category) {
-                showModal("Validation Error", "Please fill out all required fields.");
+            try {
+                await addDoc(getPublicListingsCollection(), newListing);
+                showToast('Listing submitted successfully! It will appear shortly.');
+                closeModal('post-listing-modal');
+                e.target.reset();
+            } catch (error) {
+                showToast('Error saving listing. Check console.', 'error');
+                console.error("Error submitting listing: ", error);
+            }
+        });
+
+        // Save a new review
+        document.getElementById('review-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const rating = parseInt(document.getElementById('review-rating').value);
+            const reviewText = document.getElementById('review-text').value;
+            
+            if (rating === 0 || !currentListingIdToReview) {
+                showToast('Please select a rating and ensure a listing is selected.', 'error');
                 return;
             }
 
             try {
-                const listingsCollectionRef = collection(db, `artifacts/${appId}/public/data/listings`);
-                await addDoc(listingsCollectionRef, newListing);
-                form.reset();
-                showModal("Success!", "Your business listing has been submitted and is now live!");
-                changeView('home');
-            } catch (e) {
-                console.error("Error adding document: ", e);
-                showModal("Submission Error", "Failed to submit listing. Please try again.");
-            }
-        };
+                // 1. Save the review document
+                const reviewRef = collection(db, `artifacts/${appId}/public/data/listings/${currentListingIdToReview}/reviews`);
+                await addDoc(reviewRef, {
+                    rating: rating,
+                    comment: reviewText,
+                    user_id: userId,
+                    created_at: new Date()
+                });
 
-        window.submitReview = async (listingId, event) => {
-            event.preventDefault();
-            const reviewText = document.getElementById(`review-text-${listingId}`).value;
-            const rating = parseInt(document.getElementById(`review-rating-${listingId}`).value, 10);
-
-            if (!reviewText || isNaN(rating) || rating < 1 || rating > 5) {
-                showModal("Validation Error", "Please provide a rating (1-5) and review text.");
-                return;
-            }
-
-            const newReview = {
-                userId: userId,
-                rating: rating,
-                text: reviewText,
-                date: new Date().toISOString().split('T')[0]
-            };
-
-            const listingRef = doc(db, `artifacts/${appId}/public/data/listings`, listingId);
-
-            try {
-                // Use runTransaction to safely update the reviews array
+                // 2. Update the listing's total rating and count atomically (using transaction)
+                const listingRef = doc(getPublicListingsCollection(), currentListingIdToReview);
                 await runTransaction(db, async (transaction) => {
                     const listingDoc = await transaction.get(listingRef);
                     if (!listingDoc.exists()) {
                         throw "Listing does not exist!";
                     }
                     
-                    const data = listingDoc.data();
-                    const existingReviews = data.reviews || [];
+                    const newRatingTotal = listingDoc.data().ratingTotal + rating;
+                    const newRatingCount = listingDoc.data().ratingCount + 1;
 
-                    // Simple check: prevent user from reviewing the same place multiple times
-                    if (existingReviews.some(r => r.userId === userId)) {
-                        throw "You have already reviewed this business.";
-                    }
-
-                    const updatedReviews = [...existingReviews, newReview];
-                    
-                    transaction.update(listingRef, { reviews: updatedReviews });
+                    transaction.update(listingRef, {
+                        ratingTotal: newRatingTotal,
+                        ratingCount: newRatingCount
+                    });
                 });
 
-                showModal("Review Submitted", "Thank you! Your rating and review have been added.");
-                document.getElementById(`review-form-${listingId}`).reset();
+                showToast('Review submitted! Thank you for your feedback.');
+                closeModal('review-modal');
+                e.target.reset();
+                currentListingIdToReview = null;
 
-            } catch (e) {
-                const message = typeof e === 'string' ? e : "Failed to submit review. It's possible you already reviewed this.";
-                console.error("Error in review transaction:", e);
-                showModal("Review Error", message);
+            } catch (error) {
+                showToast('Error submitting review or updating listing.', 'error');
+                console.error("Error submitting review: ", error);
             }
-        };
+        });
 
-        
-        // --- Monetization & Server Simulation Logic ---
-        
-        /** * CONCEPTUAL BACKEND: This function represents the server endpoint that runs
-         * after a successful payment verification by your backend.
-         */
-        window.simulateServerVerification = async (listingId, paymentMethod) => {
-            const verificationMessage = `
-                <p class="text-red-600 font-bold mb-3">SECURE BACKEND LOGIC:</p>
-                <p>In a live application, your **secure backend** would have just verified the transaction ID with the Khalti API.</p>
-                <p class="mt-2">If verification is successful, the server updates Firestore.</p>
-                <p class="mt-4 text-xs text-gray-500">For this demo, we are simulating a successful verification.</p>
-            `;
-            
-            showModal(
-                "Simulating Payment Verification...",
-                verificationMessage,
-                async () => {
-                    // This update is only executed AFTER secure verification on the server
-                    const listingRef = doc(db, `artifacts/${appId}/public/data/listings`, listingId);
-                    
-                    try {
-                        await updateDoc(listingRef, { 
-                            is_featured: true, 
-                            featured_until: new Date(Date.now() + FEATURE_DURATION_DAYS * 24 * 60 * 60 * 1000).toISOString(), 
-                            payment_method: paymentMethod,
-                            payment_date: serverTimestamp()
-                        });
-                        showModal("Promotion Success!", `Payment via ${paymentMethod} confirmed! Your business is now a Top Chart (Featured) listing for the next ${FEATURE_DURATION_DAYS} days.`);
-                    } catch (e) {
-                        console.error("Error setting featured status:", e);
-                        showModal("Promotion Failed", "Failed to update featured status after simulated verification. Please contact support.");
-                    }
-                },
-                "Simulate SUCCESS & Feature"
-            );
-        };
-        
-        /** Handles the client-side redirection to the Khalti API endpoint */
-        window.initiateKhaltiPayment = (listingId) => {
-            closeModal(); // Close the selection modal
-            
-            // Khalti uses paisa for amount (NPR 5000 * 100)
-            const amountInPaisa = FEATURE_PRICE_NPR * 100; 
-            const purchase_order_id = listingId + '_' + Date.now(); 
-            const purchase_order_name = `Featured Listing for ${listingId}`;
-            
-            // Redirect URL: Khalti redirects here. Your secure server endpoint must handle this.
-            // NOTE: You MUST replace 'nepal-local-connect-1db0b.netlify.app' with your actual Netlify domain.
-            const return_url = `https://nepal-local-connect-1db0b.netlify.app/khalti-verify?pid=${purchase_order_id}&lid=${listingId}`;
-            const client_return_url = window.location.href; 
-            
-            // NOTE: In a real app, this data is sent to your server first to get a secure token, 
-            // then your server redirects to Khalti's payment page.
+        // --- Filtering and Rendering ---
 
-            // 1. Define Khalti payment data structure (Client-side redirect simulation)
-            const paymentData = {
-                'public_key': KHALTI_PUBLIC_KEY,
-                'product_identity': listingId,
-                'product_name': purchase_order_name,
-                'product_url': window.location.href, 
-                'amount': amountInPaisa,
-                'return_url': return_url,
-                // Additional fields for better tracking
-                'purchase_order_id': purchase_order_id,
-                'client_return_url': client_return_url 
-            };
-            
-            // 2. Construct the URL and redirect (Using Khalti's hosted checkout URL)
-            const queryParams = new URLSearchParams(paymentData).toString();
-            // Using the Khalti TEST gateway URL
-            const gatewayUrl = 'https://khalti.com/api/v2/payment/initiate/?' + queryParams; 
-            
-            // We open a new window for the hosted payment page
-            window.open(gatewayUrl, '_blank'); 
+        function filterListings() {
+            const city = document.getElementById('city-filter').value;
+            const category = document.getElementById('category-filter').value;
+            const search = document.getElementById('search-input').value.toLowerCase();
 
-            showModal(
-                "Khalti Redirection Started",
-                `Please complete the payment in the new Khalti window (NPR ${FEATURE_PRICE_NPR}). Once payment is done, your browser will redirect to a confirmation page that will trigger the **secure server verification** process (simulated here).`,
-                () => {
-                    // After user attempts payment, prompt them to run the verification process
-                    // In a live system, this would happen automatically when the user is redirected back to the server's return_url.
-                    simulateServerVerification(listingId, 'Khalti');
-                },
-                "Payment Done? Verify Now"
-            );
-        };
-
-        /** Handles manual bank transfer confirmation (less secure, used for demo) */
-        window.initiateManualPayment = (listingId, paymentMethod) => {
-            const instructions = `Please transfer **NPR ${FEATURE_PRICE_NPR}** to Account: 123456789. Reference: Your Listing ID (${listingId}). Click "Payment Initiated" after transfer to trigger the simulated verification.`;
-
-            const title = 'Bank Transfer / Connect IPS (Manual)';
-            const confirmText = "Payment Initiated";
-
-            showModal(
-                title,
-                instructions,
-                () => {
-                    // For manual methods, we rely on the client click to trigger the feature update (simulating manual admin review)
-                    window.simulateServerVerification(listingId, paymentMethod);
-                },
-                confirmText
-            );
-        };
-
-        /** Renders the payment method selection inside the main modal */
-        window.renderPaymentSelection = (listingId) => {
-            const paymentMethods = [
-                { name: 'Khalti (Secure API Flow)', icon: 'fas fa-mobile-alt', color: 'text-purple-600', method: 'Khalti' },
-                { name: 'eSewa (Simulated API Flow)', icon: 'fas fa-shield-alt', color: 'text-green-600', method: 'eSewa' },
-                { name: 'Bank Transfer (Manual)', icon: 'fas fa-university', color: 'text-blue-600', method: 'Bank_Transfer_(Connect_IPS)' },
-            ];
-
-            const content = `
-                <div id="payment-selection-content">
-                    <h3 class="text-xl font-bold mb-4 text-blue-600">Select Payment Method (NPR ${FEATURE_PRICE_NPR})</h3>
-                    <p class="text-gray-700 mb-6">Choose how you wish to pay to make your business a Top Chart Featured Listing:</p>
-                    <div class="space-y-3">
-                        ${paymentMethods.map(method => {
-                            let actionCall;
-                            if (method.name.includes('Khalti')) {
-                                actionCall = `window.initiateKhaltiPayment('${listingId}')`;
-                            } else if (method.name.includes('eSewa')) {
-                                // Reverting to manual simulation for eSewa since Khalti is the focus now
-                                actionCall = `window.initiateManualPayment('${listingId}', 'eSewa (Simulated)')`;
-                            } else {
-                                actionCall = `window.initiateManualPayment('${listingId}', '${method.method}')`;
-                            }
-
-                            return `
-                                <button onclick="${actionCall}" 
-                                        class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50 hover:bg-blue-50 transition duration-150 shadow-sm">
-                                    <span class="flex items-center space-x-3">
-                                        <i class="${method.icon} ${method.color} text-xl w-6 text-center"></i>
-                                        <span class="font-semibold text-gray-800">${method.name}</span>
-                                    </span>
-                                    <i class="fas fa-chevron-right text-gray-400"></i>
-                                </button>
-                            `;
-                        }).join('')}
-                    </div>
-                    <button onclick="closeModal()" class="mt-6 w-full py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">Cancel</button>
-                </div>
-            `;
-            
-            document.getElementById('modal').classList.remove('hidden');
-            document.getElementById('modal').classList.add('flex');
-            document.querySelector('#modal > div').innerHTML = content;
-        };
-
-        /** Monetization Feature: Entry point */
-        window.promoteListing = (listingId) => {
-            renderPaymentSelection(listingId);
-        };
-
-
-        // --- Rendering Logic (Remains the same) ---
-
-        function getStarRating(avgRating) {
-            const rating = parseFloat(avgRating);
-            if (isNaN(rating)) return '';
-            const fullStars = Math.floor(rating);
-            const halfStar = rating % 1 >= 0.5 ? 1 : 0;
-            const emptyStars = 5 - fullStars - halfStar;
-
-            let html = '';
-            for (let i = 0; i < fullStars; i++) {
-                html += '<i class="fas fa-star rating-star"></i>';
-            }
-            if (halfStar) {
-                html += '<i class="fas fa-star-half-alt rating-star"></i>';
-            }
-            for (let i = 0; i < emptyStars; i++) {
-                html += '<i class="far fa-star rating-star"></i>';
-            }
-            return html;
-        }
-
-        function renderListingCard(listing) {
-            const isOwner = listing.ownerId === userId;
-            const featuredBadge = listing.is_featured
-                ? `<span class="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-xl">⭐️ TOP CHART</span>`
-                : '';
-            
-            const featureUntil = listing.featured_until ? new Date(listing.featured_until).toLocaleDateString() : 'N/A';
-
-            const ownerButtons = isOwner ? `
-                <div class="mt-4 flex flex-col space-y-2">
-                    <p class="text-sm font-semibold text-green-600">You own this listing.</p>
-                    ${!listing.is_featured 
-                        ? `<button onclick="promoteListing('${listing.id}')" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition font-bold shadow-md">
-                            Go Top Chart (NPR ${FEATURE_PRICE_NPR})
-                        </button>`
-                        : `<p class="text-xs text-red-500 font-bold">Featured until: ${featureUntil}</p>`
-                    }
-                </div>
-            ` : '';
-
-            const reviewSection = `
-                <div class="mt-6 pt-4 border-t border-gray-100">
-                    <h4 class="text-lg font-semibold mb-3 text-blue-800">Leave a Review:</h4>
-                    <form id="review-form-${listing.id}" onsubmit="submitReview('${listing.id}', event)">
-                        <div class="flex items-center space-x-2 mb-3">
-                            <label class="text-sm font-medium">Rating:</label>
-                            <select id="review-rating-${listing.id}" class="p-2 border border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500">
-                                <option value="5">5 Stars (Excellent)</option>
-                                <option value="4">4 Stars (Good)</option>
-                                <option value="3">3 Stars (Average)</option>
-                                <option value="2">2 Stars (Poor)</option>
-                                <option value="1">1 Star (Terrible)</option>
-                            </select>
-                        </div>
-                        <textarea id="review-text-${listing.id}" rows="2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Share your experience..."></textarea>
-                        <button type="submit" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition">Submit Review</button>
-                    </form>
-                </div>
-            `;
-
-
-            return `
-                <div class="relative bg-white p-6 rounded-xl shadow-lg transition duration-300 hover:shadow-xl ${listing.is_featured ? 'featured-card' : ''}">
-                    ${featuredBadge}
-                    <h3 class="text-2xl font-bold mb-1 text-gray-900">${listing.name}</h3>
-                    <div class="flex items-center text-sm text-gray-600 mb-2">
-                        <span class="mr-2">${listing.city} | ${listing.category}</span>
-                        <div class="text-yellow-500 text-lg">
-                           ${getStarRating(listing.avgRating)}
-                        </div>
-                        <span class="ml-2 text-gray-500 text-xs">(${listing.reviewCount} Reviews)</span>
-                    </div>
-
-                    <p class="text-gray-700 mt-2 text-sm">${listing.description}</p>
-                    <div class="mt-4 pt-2 border-t border-gray-100 text-sm">
-                        <p class="text-gray-600"><strong>Address:</strong> ${listing.address}</p>
-                        <p class="text-gray-600"><strong>Phone:</strong> <a href="tel:${listing.phone}" class="text-blue-500 hover:underline">${listing.phone}</a></p>
-                    </div>
-                    ${ownerButtons}
-                    ${reviewSection}
-                </div>
-            `;
-        }
-        
-        /** Home View: Displays filters and listings */
-        function renderHomeView() {
-            const cities = ['All', 'Biratnagar', 'Kathmandu', 'Pokhara', 'Janakpur', 'Chitwan'];
-            const categories = ['All', 'Restaurant', 'Cafe', 'Clothing Store', 'Service', 'Hotel'];
-
-            const filterControls = `
-                <div class="bg-white p-6 rounded-xl shadow-md mb-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-                    <select id="city-filter" onchange="applyFilter('city', this.value)" class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                        ${cities.map(c => `<option value="${c}" ${currentFilter.city === c ? 'selected' : ''}>City: ${c}</option>`).join('')}
-                    </select>
-                    <select id="category-filter" onchange="applyFilter('category', this.value)" class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                        ${categories.map(c => `<option value="${c}" ${currentFilter.category === c ? 'selected' : ''}>Category: ${c}</option>`).join('')}
-                    </select>
-                </div>
-            `;
-
-            let filteredListings = listings.filter(listing => {
-                const cityMatch = currentFilter.city === 'All' || listing.city === currentFilter.city;
-                const categoryMatch = currentFilter.category === 'All' || listing.category === currentFilter.category;
-                return cityMatch && categoryMatch;
+            const filtered = allListings.filter(listing => {
+                const matchesCity = city === 'all' || listing.city === city;
+                const matchesCategory = category === 'all' || listing.category === category;
+                const matchesSearch = search === '' || 
+                                      listing.name.toLowerCase().includes(search) || 
+                                      listing.description.toLowerCase().includes(search);
+                return matchesCity && matchesCategory && matchesSearch;
             });
-            
-            // Separate featured from non-featured for display logic
-            const featuredListings = filteredListings.filter(l => l.is_featured);
-            const standardListings = filteredListings.filter(l => !l.is_featured);
-            
-            const content = featuredListings.map(renderListingCard).join('') + standardListings.map(renderListingCard).join('');
 
-            return `
-                <h2 class="text-3xl font-extrabold text-gray-800 mb-6">Discover Local Gems in Nepal</h2>
-                ${filterControls}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    ${content.length > 0 ? content : '<div class="md:col-span-3 text-center py-10 text-gray-500 text-xl">No businesses found matching your filter.</div>'}
-                </div>
-            `;
+            // Sort: Featured first, then by rating
+            filtered.sort((a, b) => {
+                if (a.is_featured && !b.is_featured) return -1;
+                if (!a.is_featured && b.is_featured) return 1;
+                return parseFloat(b.avgRating) - parseFloat(a.avgRating);
+            });
+
+            renderListings(filtered);
         }
+
+        function renderListings(listings) {
+            const container = document.getElementById('listings-grid');
+            container.innerHTML = '';
+
+            if (listings.length === 0) {
+                document.getElementById('no-results').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('no-results').classList.add('hidden');
+
+            listings.forEach(listing => {
+                const ratingStarsHtml = generateStars(parseFloat(listing.avgRating));
+                
+                const featuredBadge = listing.is_featured 
+                    ? `<span class="absolute top-0 right-0 bg-yellow-500 text-white text-xs font-bold uppercase px-3 py-1 rounded-bl-lg shadow-lg">
+                        <i class="fas fa-crown mr-1"></i> TOP CHART
+                       </span>` 
+                    : '';
+                
+                const card = document.createElement('div');
+                card.className = 'listing-card bg-white p-6 rounded-xl shadow-lg relative border border-gray-100';
+                card.innerHTML = `
+                    ${featuredBadge}
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">${listing.name}</h3>
+                    <p class="text-sm text-blue-600 font-medium mb-3 uppercase">${listing.category} in ${listing.city}</p>
+                    
+                    <div class="flex items-center space-x-2 mb-3">
+                        <span class="text-lg font-bold text-yellow-500">${listing.avgRating}</span>
+                        ${ratingStarsHtml}
+                        <span class="text-sm text-gray-500">(${listing.ratingCount} reviews)</span>
+                    </div>
+
+                    <p class="text-gray-700 mb-4">${listing.description}</p>
+                    
+                    <div class="text-sm text-gray-600 space-y-1 mb-4">
+                        <p><i class="fas fa-map-marker-alt text-gray-400 mr-2"></i> ${listing.address}</p>
+                    </div>
+
+                    <div class="flex space-x-3">
+                        <button onclick="showModal('review-modal', '${listing.id}')" class="flex-1 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium">
+                            <i class="fas fa-star mr-1"></i> Add Review
+                        </button>
+                        ${listing.created_by === userId ? 
+                           `<button onclick="showModal('payment-modal', '${listing.id}')" class="flex-1 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium">
+                                <i class="fas fa-arrow-up mr-1"></i> Go Top Chart
+                            </button>`
+                            : ''
+                        }
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function generateStars(rating) {
+            const fullStar = '<i class="fas fa-star text-yellow-500"></i>';
+            const emptyStar = '<i class="far fa-star text-yellow-500"></i>';
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += i <= Math.round(rating) ? fullStar : emptyStar;
+            }
+            return stars;
+        }
+
+        function renderRatingStars(initialRating) {
+            const starsContainer = document.getElementById('rating-stars');
+            starsContainer.innerHTML = '';
+            
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('i');
+                star.className = `cursor-pointer transition-colors ${i <= initialRating ? 'fas text-yellow-500' : 'far text-gray-400 hover:text-yellow-400'} fa-star`;
+                star.dataset.rating = i;
+                star.onclick = () => {
+                    document.getElementById('review-rating').value = i;
+                    renderRatingStars(i); // Re-render to update selected stars
+                };
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // --- Payment Logic ---
+
+        // Khalti Payment Initiation (Client-Side Redirect)
+        function initiateKhaltiPayment() {
+            if (!currentListingToFeature) return;
+
+            // Generate a unique transaction ID for security
+            const transactionId = `T-${Date.now()}-${currentListingToFeature.id}`;
+            const listingId = currentListingToFeature.id;
+            const amount = FEATURE_PRICE_PAISA; // 50000 paisa = NPR 500.00
+
+            // 1. Create a dynamic form to submit to the SECURE BACKEND ENDPOINT
+            // In the live scenario, this form data would be POSTed to your Firebase Function
+            // which would then generate a secure payment URL from Khalti's API.
+            // For this demo, we use the test public key and simulate the redirect.
+
+            // The data required for the secure backend to generate the Khalti payment URL
+            const paymentData = {
+                'return_url': `${window.location.origin}/?payment_status=success&transaction_id=${transactionId}&listing_id=${listingId}`, // Your site's success page
+                'website_url': window.location.origin,
+                'amount': amount,
+                'purchase_order_id': transactionId,
+                'purchase_order_name': currentListingToFeature.name,
+                'public_key': KHALTI_PUBLIC_KEY // Public key is safe to be client-side
+            };
+
+            // This is a SIMULATION: It simulates sending data to your secure backend (Firebase Function)
+            // which would then give you the actual Khalti URL.
+            // For simplicity, we assume the backend validates this, generates a URL, and redirects.
+            // The user is redirected to a simulated Khalti page.
+            
+            showToast('Redirecting to Khalti for secure payment...', 'info');
+            closeModal('payment-modal');
+
+            // --- IMPORTANT: This is the client-side redirect to the secure verification step ---
+            window.location.href = `${KHALTI_VERIFY_ENDPOINT}?data=${btoa(JSON.stringify(paymentData))}`;
+            // NOTE: In a real implementation, KHALTI_VERIFY_ENDPOINT would be your Firebase Function URL
+        }
+
+
+        // Bank Transfer Handler
+        function handleBankTransfer() {
+            if (!currentListingToFeature) return;
+            document.getElementById('bank-listing-id').textContent = `Your Listing ID: ${currentListingToFeature.id}`;
+            showModal('bank-modal');
+        }
+
+        // --- Transaction Verification (SIMULATED SECURE BACKEND) ---
+        // This function represents the logic of your secure server (Firebase Function)
+        // when the user is redirected back from Khalti.
         
-        /** Apply filters to listings */
-        window.applyFilter = (type, value) => {
-            currentFilter[type] = value;
-            renderApp();
+        async function checkPaymentStatus() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('payment_status');
+            const transactionId = urlParams.get('transaction_id');
+            const listingId = urlParams.get('listing_id');
+
+            if (status === 'success' && transactionId && listingId) {
+                // 1. CLEAR URL (for cleaner user experience)
+                history.replaceState({}, document.title, window.location.pathname);
+                
+                showToast('Payment initiated. Waiting for secure verification...', 'info');
+
+                // 2. SIMULATE SECURE VERIFICATION (This should happen on your Firebase Function!)
+                // The Khalti Verification Guide: server_guide.md has the real Node.js code.
+                
+                try {
+                    // Simulate a delay for server processing and Khalti API call
+                    await new Promise(resolve => setTimeout(resolve, 3000)); 
+
+                    // SIMULATION: If the server confirms payment, it updates the Firestore directly.
+                    // Since we can't run the server code, we simulate a successful verification.
+                    
+                    const listingRef = doc(getPublicListingsCollection(), listingId);
+                    await updateDoc(listingRef, {
+                        is_featured: true,
+                        featured_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+                        last_transaction_id: transactionId
+                    });
+
+                    showToast('Payment Verified! Your business is now a TOP CHART listing for 30 days!', 'success');
+
+                } catch (error) {
+                    showToast('Secure verification failed. Please contact support.', 'error');
+                    console.error("Simulated Server Verification Error:", error);
+                }
+            } else if (status === 'failed') {
+                // Khalti redirects back with status=failed if user cancels
+                history.replaceState({}, document.title, window.location.pathname);
+                showToast('Payment failed or was cancelled by the user.', 'info');
+            }
+        }
+
+        // --- Startup ---
+
+        window.onload = function() {
+            // Set debug log level for development/troubleshooting
+            setLogLevel('debug'); 
+            
+            initFirebase();
+            checkPaymentStatus();
+            
+            // Initial render call (will be overwritten by snapshot later)
+            renderRatingStars(0); 
         };
 
-        /** Submit View: Form for business owners to post a listing */
-        function renderSubmitView() {
-            const cities = ['Biratnagar', 'Kathmandu', 'Pokhara', 'Janakpur', 'Chitwan'];
-            const categories = ['Restaurant', 'Cafe', 'Clothing Store', 'Service', 'Hotel'];
-
-            return `
-                <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-2xl">
-                    <h2 class="text-3xl font-bold text-blue-600 mb-6">Post Your Local Business</h2>
-                    <p class="text-gray-600 mb-8">Fill in the details below to reach thousands of local customers. You can promote your listing to the 'Top Chart' later from your listing page.</p>
-                    
-                    <form onsubmit="submitListing(event)">
-                        <div class="space-y-4">
-                            <div>
-                                <label for="name" class="block text-sm font-medium text-gray-700">Business Name *</label>
-                                <input type="text" id="name" name="name" required class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500">
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="city" class="block text-sm font-medium text-gray-700">City *</label>
-                                    <select id="city" name="city" required class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500">
-                                        <option value="" disabled selected>Select City</option>
-                                        ${cities.map(c => `<option value="${c}">${c}</option>`).join('')}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="category" class="block text-sm font-medium text-gray-700">Category *</label>
-                                    <select id="category" name="category" required class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500">
-                                        <option value="" disabled selected>Select Category</option>
-                                        ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label for="description" class="block text-sm font-medium text-gray-700">Description (Max 500 chars)</label>
-                                <textarea id="description" name="description" rows="4" maxlength="500" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"></textarea>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="address" class="block text-sm font-medium text-gray-700">Full Address *</label>
-                                    <input type="text" id="address" name="address" required class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500">
-                                </div>
-                                <div>
-                                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number *</label>
-                                    <input type="tel" id="phone" name="phone" required class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="mt-8 w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition font-bold text-lg shadow-lg">
-                            Submit My Listing
-                        </button>
-                    </form>
-                </div>
-            `;
-        }
-
-        /** Main rendering function that controls the view based on currentPage state */
-        function renderApp() {
-            const container = document.getElementById('app-container');
-            let content = '';
-
-            // Remove initial loading message
-            const loadingMessage = document.getElementById('loading-message');
-            if (loadingMessage) loadingMessage.remove();
-
-            switch (currentPage) {
-                case 'submit':
-                    content = renderSubmitView();
-                    break;
-                case 'home':
-                default:
-                    content = renderHomeView();
-                    break;
-            }
-
-            container.innerHTML = content;
-        }
-
-        // Start the application
-        initFirebase();
     </script>
 </body>
 </html>
