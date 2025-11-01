@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nepal Local Connect - Promote Local Businesses</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
+        .featured-card {
+            border: 3px solid #FF5722; /* Deep Orange for featured */
+            box-shadow: 0 10px 15px -3px rgba(255, 87, 34, 0.4), 0 4px 6px -2px rgba(255, 87, 34, 0.2);
+            animation: pulse-featured 2s infinite;
+        }
+        @keyframes pulse-featured {
+            0%, 100% { transform: scale(1.0); }
+            50% { transform: scale(1.01); }
+        }
+        .rating-star { color: #FFD700; } /* Gold color for ratings */
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-blue-600 shadow-lg sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-white tracking-tight">
+                🇳🇵 Local Connect Nepal
+            </h1>
+            <nav class="flex space-x-4">
+                <button onclick="changeView('home')" class="text-white hover:text-blue-200 transition duration-150 font-medium">Home</button>
+                <button onclick="changeView('submit')" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-150 shadow-md">
+                    + Post My Business
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="app-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Content will be rendered here by JavaScript -->
+        <div class="text-center py-20">
+            <p id="loading-message" class="text-xl text-gray-500">Initializing app and connecting to database...</p>
+        </div>
+    </main>
+
+    <!-- Modal for Messages/Prompts (used instead of alert/confirm) -->
+    <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300">
+            <!-- Modal Content will be dynamically inserted here -->
+            <div id="modal-content-wrapper">
+                <h3 id="modal-title" class="text-xl font-bold mb-3 text-blue-600"></h3>
+                <p id="modal-message" class="text-gray-700 mb-6"></p>
+                <div class="flex justify-end space-x-4">
+                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">Close</button>
+                    <button id="modal-confirm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition hidden">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Imports and Setup -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, orderBy, getDocs, runTransaction, arrayUnion, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- Payment Configuration ---
+        // NOTE: In a real app, Khalti's Secret Key (API Key) MUST be stored securely on your server.
+        // Khalti's Public Key is safe to be client-side.
+        const KHALTI_PUBLIC_KEY = "TEST_PUBLIC_KEY"; // Placeholder for Khalti Public Key
+        const FEATURE_PRICE_NPR = 5000;
+        const FEATURE_DURATION_DAYS = 30;
+        // --- End Payment Configuration ---
+
+        let app;
+        let db;
+        let auth;
+        let userId = 'anon';
+        let listings = [];
+        let currentPage = 'home';
+        let currentFilter = { city: 'All', category: 'All' };
+
+        // --- Utility Functions ---
+
+        /** Shows a custom modal message instead of using alert() */
+        window.showModal = (title, message, confirmCallback = null, confirmText = "Confirm") => {
+            const modalContentWrapper = document.getElementById('modal-content-wrapper');
+            modalContentWrapper.innerHTML = `
+                <h3 id="modal-title" class="text-xl font-bold mb-3 text-blue-600">${title}</h3>
+                <p id="modal-message" class="text-gray-700 mb-6">${message}</p>
+                <div class="flex justify-end space-x-4">
+                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">Close</button>
+                    <button id="modal-confirm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition hidden">${confirmText}</button>
+                </div>
+            `;
+            
+            const confirmButton = document.getElementById('modal-confirm');
+            const modal = document.getElementById('modal');
+            
+            if (confirmCallback) {
+                confirmButton.classList.remove('hidden');
+                confirmButton.onclick = () => {
+                    closeModal();
+                    confirmCallback();
+                };
+            } else {
+                confirmButton.classList.add('hidden');
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        /** Closes the custom modal */
+        window.closeModal = () => {
+            const modal = document.getElementById('modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            // Reset to default wrapper for future generic modals
+            document.querySelector('#modal > div').innerHTML = `<div id="modal-content-wrapper"><h3 id="modal-title" class="text-xl font-bold mb-3 text-blue-600"></h3><p id="modal-message" class="text-gray-700 mb-6"></p><div class="flex justify-end space-x-4"><button onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">Close</button><button id="modal-confirm" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition hidden">Confirm</button></div></div>`;
+        };
+
+        /** Switches the application view */
+        window.changeView = (view) => {
+            currentPage = view;
+            renderApp();
+        };
+        
+        // --- Firebase Initialization and Auth ---
+
+        async function initFirebase() {
+            if (!firebaseConfig) {
+                console.error("Firebase config is missing.");
+                document.getElementById('loading-message').textContent = "ERROR: Firebase configuration is missing.";
+                return;
+            }
+
+            try {
+                // setLogLevel('debug'); // Uncomment for Firestore debugging
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                await new Promise((resolve) => {
+                    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                        } else {
+                            // Sign in either with custom token or anonymously
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        }
+                        unsubscribe(); 
+                        resolve();
+                    });
+                });
+
+                startListeningToData();
+                renderApp();
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                document.getElementById('loading-message').textContent = `ERROR: Firebase failed to initialize. Check console for details. ${error.message}`;
+            }
+        }
+
+        // --- Firestore Data Management (Listings, Reviews) ---
+
+        /** Starts real-time listener for listings data */
+        function startListeningToData() {
+            const listingsCollectionRef = collection(db, `artifacts/${appId}/public/data/listings`);
+
+            onSnapshot(listingsCollectionRef, (snapshot) => {
+                const fetchedListings = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    // Ensure reviews is an array (or default to empty)
+                    if (data.reviews && data.reviews.length > 0) {
+                        const totalRating = data.reviews.reduce((sum, r) => sum + r.rating, 0);
+                        data.avgRating = (totalRating / data.reviews.length).toFixed(1);
+                        data.reviewCount = data.reviews.length;
+                    } else {
+                        data.avgRating = 'N/A';
+                        data.reviewCount = 0;
+                    }
+                    fetchedListings.push({ id: doc.id, ...data });
+                });
+
+                // Sort: Featured first, then by highest average rating
+                fetchedListings.sort((a, b) => {
+                    // Check if current date is past featured_until (basic client-side expiry simulation)
+                    const now = Date.now();
+                    if (a.is_featured && new Date(a.featured_until).getTime() < now) a.is_featured = false;
+                    if (b.is_featured && new Date(b.featured_until).getTime() < now) b.is_featured = false;
+                    
+                    if (a.is_featured && !b.is_featured) return -1;
+                    if (!a.is_featured && b.is_featured) return 1;
+                    
+                    const ratingA = parseFloat(a.avgRating) || 0;
+                    const ratingB = parseFloat(b.avgRating) || 0;
+                    return ratingB - ratingA;
+                });
+
+                listings = fetchedListings;
+                renderApp(); // Re-render whenever data changes
+            }, (error) => {
+                console.error("Error listening to listings:", error);
+                showModal("Data Error", "Could not load business listings in real-time. Please check your connection.");
+            });
+        }
+
+        // ... submitListing and submitReview functions remain the same as previous versions ...
+
+        window.submitListing = async (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const newListing = {
+                name: form.name.value,
+                city: form.city.value,
+                category: form.category.value,
+                description: form.description.value,
+                address: form.address.value,
+                phone: form.phone.value,
+                ownerId: userId,
+                is_featured: false, // Default to false
+                reviews: [],
+                createdAt: serverTimestamp()
+            };
+
+            if (!newListing.name || !newListing.city || !newListing.category) {
+                showModal("Validation Error", "Please fill out all required fields.");
+                return;
+            }
+
+            try {
+                const listingsCollectionRef = collection(db, `artifacts/${appId}/public/data/listings`);
+                await addDoc(listingsCollectionRef, newListing);
+                form.reset();
+                showModal("Success!", "Your business listing has been submitted and is now live!");
+                changeView('home');
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                showModal("Submission Error", "Failed to submit listing. Please try again.");
+            }
+        };
+
+        window.submitReview = async (listingId, event) => {
+            event.preventDefault();
+            const reviewText = document.getElementById(`review-text-${listingId}`).value;
+            const rating = parseInt(document.getElementById(`review-rating-${listingId}`).value, 10);
+
+            if (!reviewText || isNaN(rating) || rating < 1 || rating > 5) {
+                showModal("Validation Error", "Please provide a rating (1-5) and review text.");
+                return;
+            }
+
+            const newReview = {
+                userId: userId,
+                rating: rating,
+                text: reviewText,
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            const listingRef = doc(db, `artifacts/${appId}/public/data/listings`, listingId);
+
+            try {
+                // Use runTransaction to safely update the reviews array
+                await runTransaction(db, async (transaction) => {
+                    const listingDoc = await transaction.get(listingRef);
+                    if (!listingDoc.exists()) {
+                        throw "Listing does not exist!";
+                    }
+                    
+                    const data = listingDoc.data();
+                    const existingReviews = data.reviews || [];
+
+                    // Simple check: prevent user from reviewing the same place multiple times
+                    if (existingReviews.some(r => r.userId === userId)) {
+                        throw "You have already reviewed this business.";
+                    }
+
+                    const updatedReviews = [...existingReviews, newReview];
+                    
+                    transaction.update(listingRef, { reviews: updatedReviews });
+                });
+
+                showModal("Review Submitted", "Thank you! Your rating and review have been added.");
+                document.getElementById(`review-form-${listingId}`).reset();
+
+            } catch (e) {
+                const message = typeof e === 'string' ? e : "Failed to submit review. It's possible you already reviewed this.";
+                console.error("Error in review transaction:", e);
+                showModal("Review Error", message);
+            }
+        };
+
+        
+        // --- Monetization & Server Simulation Logic ---
+        
+        /** * CONCEPTUAL BACKEND: This function represents the server endpoint that runs
+         * after a successful payment verification by your backend.
+         */
+        window.simulateServerVerification = async (listingId, paymentMethod) => {
+            const verificationMessage = `
+                <p class="text-red-600 font-bold mb-3">SECURE BACKEND LOGIC:</p>
+                <p>In a live application, your **secure backend** would have just verified the transaction ID with the Khalti API.</p>
+                <p class="mt-2">If verification is successful, the server updates Firestore.</p>
+                <p class="mt-4 text-xs text-gray-500">For this demo, we are simulating a successful verification.</p>
+            `;
+            
+            showModal(
+                "Simulating Payment Verification...",
+                verificationMessage,
+                async () => {
+                    // This update is only executed AFTER secure verification on the server
+                    const listingRef = doc(db, `artifacts/${appId}/public/data/listings`, listingId);
+                    
+                    try {
+                        await updateDoc(listingRef, { 
+                            is_featured: true, 
+                            featured_until: new Date(Date.now() + FEATURE_DURATION_DAYS * 24 * 60 * 60 * 1000).toISOString(), 
+                            payment_method: paymentMethod,
+                            payment_date: serverTimestamp()
+                        });
+                        showModal("Promotion Success!", `Payment via ${paymentMethod} confirmed! Your business is now a Top Chart (Featured) listing for the next ${FEATURE_DURATION_DAYS} days.`);
+                    } catch (e) {
+                        console.error("Error setting featured status:", e);
+                        showModal("Promotion Failed", "Failed to update featured status after simulated verification. Please contact support.");
+                    }
+                },
+                "Simulate SUCCESS & Feature"
+            );
+        };
+        
+        /** Handles the client-side redirection to the Khalti API endpoint */
+        window.initiateKhaltiPayment = (listingId) => {
+            closeModal(); // Close the selection modal
+            
+            // Khalti uses paisa for amount (NPR 5000 * 100)
+            const amountInPaisa = FEATURE_PRICE_NPR * 100; 
+            const purchase_order_id = listingId + '_' + Date.now(); 
+            const purchase_order_name = `Featured Listing for ${listingId}`;
+            
+            // Redirect URL: Khalti redirects here. Your secure server endpoint must handle this.
+            const return_url = `${window.location.origin}/khalti-success?pid=${purchase_order_id}&lid=${listingId}`;
+            const client_return_url = window.location.href; 
+            
+            // NOTE: In a real app, this data is sent to your server first to get a secure token, 
+            // then your server redirects to Khalti's payment page.
+
+            // 1. Define Khalti payment data structure (Client-side redirect simulation)
+            const paymentData = {
+                'public_key': KHALTI_PUBLIC_KEY,
+                'product_identity': listingId,
+                'product_name': purchase_order_name,
+                'product_url': window.location.href, 
+                'amount': amountInPaisa,
+                'return_url': return_url,
+                // Additional fields for better tracking
+                'purchase_order_id': purchase_order_id,
+                'client_return_url': client_return_url 
+            };
+            
+            // 2. Construct the URL and redirect (Using Khalti's hosted checkout URL)
+            const queryParams = new URLSearchParams(paymentData).toString();
+            // Using the Khalti TEST gateway URL
+            const gatewayUrl = 'https://khalti.com/api/v2/payment/initiate/?' + queryParams; 
+            
+            // We open a new window for the hosted payment page
+            window.open(gatewayUrl, '_blank'); 
+
+            showModal(
+                "Khalti Redirection Started",
+                `Please complete the payment in the new Khalti window (NPR ${FEATURE_PRICE_NPR}). Once payment is done, your browser will redirect to a confirmation page that will trigger the **secure server verification** process (simulated here).`,
+                () => {
+                    // After user attempts payment, prompt them to run the verification process
+                    // In a live system, this would happen automatically when the user is redirected back to the server's return_url.
+                    simulateServerVerification(listingId, 'Khalti');
+                },
+                "Payment Done? Verify Now"
+            );
+        };
+
+        /** Handles manual bank transfer confirmation (less secure, used for demo) */
+        window.initiateManualPayment = (listingId, paymentMethod) => {
+            const instructions = `Please transfer **NPR ${FEATURE_PRICE_NPR}** to Account: 123456789. Reference: Your Listing ID (${listingId}). Click "Payment Initiated" after transfer to trigger the simulated verification.`;
+
+            const title = 'Bank Transfer / Connect IPS (Manual)';
+            const confirmText = "Payment Initiated";
+
+            showModal(
+                title,
+                instructions,
+                () => {
+                    // For manual methods, we rely on the client click to trigger the feature update (simulating manual admin review)
+                    window.simulateServerVerification(listingId, paymentMethod);
+                },
+                confirmText
+            );
+        };
+
+        /** Renders the payment method selection inside the main modal */
+        window.renderPaymentSelection = (listingId) => {
+            const paymentMethods = [
+                { name: 'Khalti (Secure API Flow)', icon: 'fas fa-mobile-alt', color: 'text-purple-600', method: 'Khalti' },
+                { name: 'eSewa (Simulated API Flow)', icon: 'fas fa-shield-alt', color: 'text-green-600', method: 'eSewa' },
+                { name: 'Bank Transfer (Manual)', icon: 'fas fa-university', color: 'text-blue-600', method: 'Bank_Transfer_(Connect_IPS)' },
+            ];
+
+            const content = `
+                <div id="payment-selection-content">
+                    <h3 class="text-xl font-bold mb-4 text-blue-600">Select Payment Method (NPR ${FEATURE_PRICE_NPR})</h3>
+                    <p class="text-gray-700 mb-6">Choose how you wish to pay to make your business a Top Chart Featured Listing:</p>
+                    <div class="space-y-3">
+                        ${paymentMethods.map(method => {
+                            let actionCall;
+                            if (method.name.includes('Khalti')) {
+                                actionCall = `window.initiateKhaltiPayment('${listingId}')`;
+                            } else if (method.name.includes('eSewa')) {
+                                // Reverting to manual simulation for eSewa since Khalti is the focus now
+                                actionCall = `window.initiateManualPayment('${listingId}', 'eSewa (Simulated)')`;
+                            } else {
+                                actionCall = `window.initiateManualPayment('${listingId}', '${method.method}')`;
+                            }
+
+                            return `
+                                <button onclick="${actionCall}" 
+                                        class="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50 hover:bg-blue-50 transition duration-150 shadow-sm">
+                                    <span class="flex items-center space-x-3">
+                                        <i class="${method.icon} ${method.color} text-xl w-6 text-center"></i>
+                                        <span class="font-semibold text-gray-800">${method.name}</span>
+                                    </span>
+                                    <i class="fas fa-chevron-right text-gray-400"></i>
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                    <button onclick="closeModal()" class="mt-6 w-full py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">Cancel</button>
+                </div>
+            `;
+            
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+            document.querySelector('#modal > div').innerHTML = content;
+        };
+
+        /** Monetization Feature: Entry point */
+        window.promoteListing = (listingId) => {
+            renderPaymentSelection(listingId);
+        };
+
+
+        // --- Rendering Logic (Remains the same) ---
+
+        function getStarRating(avgRating) {
+            const rating = parseFloat(avgRating);
+            if (isNaN(rating)) return '';
+            const fullStars = Math.floor(rating);
+            const halfStar = rating % 1 >= 0.5 ? 1 : 0;
+            const emptyStars = 5 - fullStars - halfStar;
+
+            let html = '';
+            for (let i = 0; i < fullStars; i++) {
+                html += '<i class="fas fa-star rating-star"></i>';
+            }
+            if (halfStar) {
+                html += '<i class="fas fa-star-half-alt rating-star"></i>';
+            }
+            for (let i = 0; i < emptyStars; i++) {
+                html += '<i class="far fa-star rating-star"></i>';
+            }
+            return html;
+        }
+
+        function renderListingCard(listing) {
+            const isOwner = listing.ownerId === userId;
+            const featuredBadge = listing.is_featured
+                ? `<span class="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-xl">⭐️ TOP CHART</span>`
+                : '';
+            
+            const featureUntil = listing.featured_until ? new Date(listing.featured_until).toLocaleDateString() : 'N/A';
+
+            const ownerButtons = isOwner ? `
+                <div class="mt-4 flex flex-col space-y-2">
+                    <p class="text-sm font-semibold text-green-600">You own this listing.</p>
+                    ${!listing.is_featured 
+                        ? `<button onclick="promoteListing('${listing.id}')" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition font-bold shadow-md">
+                            Go Top Chart (NPR ${FEATURE_PRICE_NPR})
+                        </button>`
+                        : `<p class="text-xs text-red-500 font-bold">Featured until: ${featureUntil}</p>`
+                    }
+                </div>
+            ` : '';
+
+            const reviewSection = `
+                <div class="mt-6 pt-4 border-t border-gray-100">
+                    <h4 class="text-lg font-semibold mb-3 text-blue-800">Leave a Review:</h4>
+                    <form id="review-form-${listing.id}" onsubmit="submitReview('${listing.id}', event)">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <label class="text-sm font-medium">Rating:</label>
+                            <select id="review-rating-${listing.id}" class="p-2 border border-gray-300 rounded-lg text-sm focus:ring-orange-500 focus:border-orange-500">
+                                <option value="5">5 Stars (Excellent)</option>
+                                <option value="4">4 Stars (Good)</option>
+                                <option value="3">3 Stars (Average)</option>
+                                <option value="2">2 Stars (Poor)</option>
+                                <option value="1">1 Star (Terrible)</option>
+                            </select>
+                        </div>
+                        <textarea id="review-text-${listing.id}" rows="2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Share your experience..."></textarea>
+                        <button type="submit" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition">Submit Review</button>
+                    </form>
+                </div>
+            `;
+
+
+            return `
+                <div class="relative bg-white p-6 rounded-xl shadow-lg transition duration-300 hover:shadow-xl ${listing.is_featured ? 'featured-card' : ''}">
+                    ${featuredBadge}
+                    <h3 class="text-2xl font-bold mb-1 text-gray-900">${listing.name}</h3>
+                    <div class="flex items-center text-sm text-gray-600 mb-2">
+                        <span class="mr-2">${listing.city} | ${listing.category}</span>
+                        <div class="text-yellow-500 text-lg">
+                           ${getStarRating(listing.avgRating)}
+                        </div>
+                        <span class="ml-2 text-gray-500 text-xs">(${listing.reviewCount} Reviews)</span>
+                    </div>
+
+                    <p class="text-gray-700 mt-2 text-sm">${listing.description}</p>
+                    <div class="mt-4 pt-2 border-t border-gray-100 text-sm">
+                        <p class="text-gray-600"><strong>Address:</strong> ${listing.address}</p>
+                        <p class="text-gray-600"><strong>Phone:</strong> <a href="tel:${listing.phone}" class="text-blue-500 hover:underline">${listing.phone}</a></p>
+                    </div>
+                    ${ownerButtons}
+                    ${reviewSection}
+                </div>
+            `;
+        }
+        
+        /** Home View: Displays filters and listings */
+        function renderHomeView() {
+            const cities = ['All', 'Biratnagar', 'Kathmandu', 'Pokhara', 'Janakpur', 'Chitwan'];
+            const categories = ['All', 'Restaurant', 'Cafe', 'Clothing Store', 'Service', 'Hotel'];
+
+            const filterControls = `
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                    <select id="city-filter" onchange="applyFilter('city', this.value)" class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        ${cities.map(c => `<option value="${c}" ${currentFilter.city === c ? 'selected' : ''}>City: ${c}</option>`).join('')}
+                    </select>
+                    <select id="category-filter" onchange="applyFilter('category', this.value)" class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        ${categories.map(c => `<option value="${c}" ${currentFilter.category === c ? 'selected' : ''}>Category: ${c}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+
+            let filteredListings = listings.filter(listing => {
+                const cityMatch = currentFilter.city === 'All' || listing.city === currentFilter.city;
+                const categoryMatch = currentFilter.category === 'All' || listing.category === currentFilter.category;
+                return cityMatch && categoryMatch;
+            });
+            
+            // Separate featured from non-featured for display logic
+            const featuredListings = filteredListings.filter(l => l.is_featured);
+            const standardListings = filteredListings.filter(l => !l.is_featured);
+            
+            const content = featuredListings.map(renderListingCard).join('') + standardListings.map(renderListingCard).join('');
+
+            return `
+                <h2 class="text-3xl font-extrabold text-gray-800 mb-6">Discover Local Gems in Nepal</h2>
+                ${filterControls}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    ${content.length > 0 ? content : '<div class="md:col-span-3 text-center py-10 text-gray-500 text-xl">No businesses found matching your filter.</div>'}
+                </div>
+            `;
+        }
+        
+        /** Apply filters to listings */
+        window.applyFilter = (type, value) => {
+            currentFilter[type] = value;
+            renderApp();
+        };
+
+        /** Submit View: Form for business owners to post a listing */
+        function renderSubmitView() {
+            const cities = ['Biratnagar', 'Kathmandu', 'Pokhara', 'Janakpur', 'Chitwan'];
+            const categories = ['Restaurant', 'Cafe', 'Clothing Store', 'Service', 'Hotel'];
+
+            return `
+                <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-2xl">
+                    <h2 class="text-3xl font-bold text-blue-600 mb-6">Post Your Local Business</h2>
+                    <p class="text-gray-600 mb-8">Fill in the details below to reach thousands of local customers. You can promote your listing to the 'Top Chart' later from your listing page.</p>
+                    
+                    <form onsubmit="submitListing(event)">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-gray-700">Business Name *</label>
+                                <input type="text" id="name" name="name" required class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500">
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="city" class="block text-sm font-medium text-gray-700">City *</label>
+                                    <select id="city" name="city" required class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500">
+                                        <option value="" disabled selected>Select City</option>
+                                        ${cities.map(c => `<option value="${c}">${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="category" class="block text-sm font-medium text-gray-700">Category *</label>
+                                    <select id="category" name="category" required class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500">
+                                        <option value="" disabled selected>Select Category</option>
+                                        ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-700">Description (Max 500 chars)</label>
+                                <textarea id="description" name="description" rows="4" maxlength="500" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="address" class="block text-sm font-medium text-gray-700">Full Address *</label>
+                                    <input type="text" id="address" name="address" required class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500">
+                                </div>
+                                <div>
+                                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number *</label>
+                                    <input type="tel" id="phone" name="phone" required class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="mt-8 w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition font-bold text-lg shadow-lg">
+                            Submit My Listing
+                        </button>
+                    </form>
+                </div>
+            `;
+        }
+
+        /** Main rendering function that controls the view based on currentPage state */
+        function renderApp() {
+            const container = document.getElementById('app-container');
+            let content = '';
+
+            // Remove initial loading message
+            const loadingMessage = document.getElementById('loading-message');
+            if (loadingMessage) loadingMessage.remove();
+
+            switch (currentPage) {
+                case 'submit':
+                    content = renderSubmitView();
+                    break;
+                case 'home':
+                default:
+                    content = renderHomeView();
+                    break;
+            }
+
+            container.innerHTML = content;
+        }
+
+        // Start the application
+        initFirebase();
+    </script>
+</body>
+</html>
