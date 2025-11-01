@@ -81,13 +81,13 @@
                 <h3 class="font-semibold text-gray-700 mb-3">Select Payment Method (Secure Backend Required):</h3>
                 
                 <!-- Khalti Option -->
-                <button onclick="initiateKhaltiPayment()" class="w-full flex items-center justify-between p-4 mb-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors shadow-md">
+                <button id="khalti-pay-btn" class="w-full flex items-center justify-between p-4 mb-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors shadow-md">
                     <span class="font-bold">Pay with Khalti (Recommended)</span>
                     <i class="fas fa-wallet text-xl"></i>
                 </button>
 
                 <!-- Bank Transfer Option -->
-                <button onclick="handleBankTransfer()" class="w-full flex items-center justify-between p-4 mb-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-md">
+                <button id="bank-pay-btn" class="w-full flex items-center justify-between p-4 mb-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-md">
                     <span class="font-bold">Bank Transfer (Manual)</span>
                     <i class="fas fa-university text-xl"></i>
                 </button>
@@ -383,9 +383,8 @@
 
         async function handleSignOut() {
             try {
+                // signOut is reliable and triggers the onAuthStateChanged listener
                 await signOut(auth);
-                // FORCE UI UPDATE: The onAuthStateChanged listener *should* handle this, 
-                // but adding a toast and logging for clarity.
                 showToast("You have been signed out.", 'info');
             } catch (error) {
                 showToast(`Sign out failed: ${error.message}`, 'error');
@@ -410,7 +409,7 @@
                         <button id="post-business-btn" class="px-4 py-2 bg-primary text-white rounded-full hover:bg-red-600 transition-colors font-semibold shadow-md">
                             + Post My Business
                         </button>
-                        <button onclick="handleSignOut()" class="px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors">
+                        <button id="sign-out-btn" class="px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors">
                             Sign Out
                         </button>
                     </div>
@@ -419,20 +418,14 @@
                 // No user is signed in
                 container.innerHTML = `
                     <a href="#listings" class="text-gray-600 hover:text-primary transition-colors font-medium">Home</a>
-                    <button onclick="handleGoogleSignIn()" class="px-4 py-2 bg-secondary text-white rounded-full hover:bg-blue-800 transition-colors font-semibold shadow-md">
+                    <button id="sign-in-btn" class="px-4 py-2 bg-secondary text-white rounded-full hover:bg-blue-800 transition-colors font-semibold shadow-md">
                         <i class="fab fa-google mr-2"></i> Sign In to Post
                     </button>
                 `;
             }
 
-            // Re-attach listener for Post button if it was just rendered
-            const postBtn = document.getElementById('post-business-btn');
-            if (postBtn) {
-                postBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    showModal('post-listing-modal');
-                });
-            }
+            // Re-attach listeners for dynamically created buttons
+            attachDynamicButtonListeners();
         }
 
         // --- Firebase Initialization and Authentication Listener ---
@@ -444,7 +437,6 @@
                 db = getFirestore(app);
                 auth = getAuth(app); 
                 
-                // onAuthStateChanged is the most reliable way to monitor sign-in state
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
@@ -453,10 +445,11 @@
                             authInitialized = true;
                         }
                     } else {
-                        userId = null;
-                        // Render empty list if user signs out and data was previously loaded
+                        // FIX: When user signs out or no user is present, clear userId
+                        userId = null; 
                         if (authInitialized) {
-                            filterListings();
+                            // Re-render listings to hide owner buttons if user signs out
+                            filterListings(); 
                         }
                     }
                     
@@ -471,7 +464,7 @@
             }
         }
 
-        // --- Firestore Operations ---
+        // --- Firestore Operations (Unchanged) ---
 
         // Path helpers based on the security rules
         const getPublicListingsCollection = () => collection(db, `artifacts/${appId}/public/data/listings`);
@@ -500,11 +493,10 @@
             });
         }
 
-        // Save a new listing
+        // Save a new listing (Unchanged)
         document.getElementById('listing-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Re-check sign-in status before writing data
             if (!userId) {
                 showToast("Please sign in to submit a listing.", 'error');
                 return;
@@ -535,7 +527,7 @@
             }
         });
 
-        // Save a new review
+        // Save a new review (Unchanged)
         document.getElementById('review-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -590,7 +582,7 @@
             }
         });
 
-        // Function to delete a listing (Requires signed-in owner)
+        // Function to delete a listing (Unchanged)
         window.deleteListing = async (listingId) => {
             if (!userId) {
                 showToast("Please sign in to delete a listing.", 'error');
@@ -671,12 +663,13 @@
                 let reviewButtonHTML = '';
                 let ownerButtonsHTML = '';
 
+                // Review button logic
                 if (isLoggedIn) { 
                     reviewButtonHTML = `<button onclick="showModal('review-modal', '${listing.id}')" class="${reviewButtonClass}">
                         <i class="fas fa-star mr-1"></i> Add Review
                     </button>`;
                 } else {
-                    reviewButtonHTML = `<button onclick="handleGoogleSignIn()" class="${reviewButtonClass} opacity-60">
+                    reviewButtonHTML = `<button id="sign-in-to-review-${listing.id}" class="${reviewButtonClass} opacity-60">
                         <i class="fas fa-sign-in-alt mr-1"></i> Sign In to Review
                     </button>`;
                 }
@@ -697,9 +690,8 @@
                 } else {
                     // If not owner, only show review button
                     actionButtonsHTML = reviewButtonHTML;
-                    actionButtonsHTML = `<div class="w-full">${actionButtonsHTML}</div>`; // Keep review button centered if alone
+                    actionButtonsHTML = `<div class="w-full">${actionButtonsHTML}</div>`;
                 }
-
 
                 const card = document.createElement('div');
                 card.className = 'listing-card bg-white p-0 rounded-xl shadow-lg relative border border-gray-100';
@@ -724,12 +716,20 @@
                             <p><i class="fas fa-map-marker-alt text-gray-400 mr-2"></i> ${listing.address}</p>
                         </div>
 
-                        <div class="flex space-x-3 mt-4">
+                        <div class="flex justify-between items-center space-x-3 mt-4">
                             ${actionButtonsHTML}
                         </div>
                     </div>
                 `;
                 container.appendChild(card);
+                
+                // Attach listener to the "Sign In to Review" button if it exists
+                if (!isLoggedIn) {
+                    const signInReviewBtn = card.querySelector(`#sign-in-to-review-${listing.id}`);
+                    if (signInReviewBtn) {
+                        signInReviewBtn.addEventListener('click', handleGoogleSignIn);
+                    }
+                }
             });
         }
         
@@ -758,9 +758,8 @@
                 starsContainer.appendChild(star);
             }
         }
-
+        
         // --- Payment Logic (Unchanged) ---
-
         function initiateKhaltiPayment() {
             if (!currentListingToFeature) return;
 
@@ -824,16 +823,73 @@
         
         // --- Startup ---
 
+        function attachStaticButtonListeners() {
+            // FIX: Attach listener for the main Sign In button
+            const signInBtn = document.getElementById('sign-in-btn');
+            if (signInBtn) {
+                signInBtn.addEventListener('click', handleGoogleSignIn);
+            }
+            
+            // FIX: Dedicated listener for the modal CANCEL button (Post Listing Modal)
+            const cancelListingBtn = document.getElementById('cancel-listing-btn');
+            if (cancelListingBtn) {
+                cancelListingBtn.addEventListener('click', () => {
+                    closeModal('post-listing-modal');
+                    document.getElementById('listing-form').reset();
+                });
+            }
+
+            // FIX: Dedicated listener for the post button (in header)
+            const postBtn = document.getElementById('post-business-btn');
+            if (postBtn) {
+                postBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showModal('post-listing-modal');
+                });
+            }
+
+             // FIX: Dedicated listener for the sign out button (rendered dynamically)
+            const signOutBtn = document.getElementById('sign-out-btn');
+            if (signOutBtn) {
+                signOutBtn.addEventListener('click', handleSignOut);
+            }
+        }
+        
+        function attachDynamicButtonListeners() {
+            // This function runs every time renderAuthUI runs, attaching listeners to the newly created buttons.
+            
+            // 1. Sign In Button listener (when signed out)
+            const signInBtn = document.getElementById('sign-in-btn');
+            if (signInBtn) {
+                signInBtn.addEventListener('click', handleGoogleSignIn);
+            }
+
+            // 2. Sign Out Button listener (when signed in)
+            const signOutBtn = document.getElementById('sign-out-btn');
+            if (signOutBtn) {
+                signOutBtn.addEventListener('click', handleSignOut);
+            }
+            
+            // 3. Post Business Button listener (when signed in)
+            const postBtn = document.getElementById('post-business-btn');
+            if (postBtn) {
+                postBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showModal('post-listing-modal');
+                });
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             setLogLevel('debug'); 
             initFirebase();
             checkPaymentStatus();
             renderRatingStars(0); 
-            
-            // FIX: Dedicated listener for the modal CANCEL button
-            const cancelBtn = document.getElementById('cancel-listing-btn');
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', () => {
+
+            // Initial attachment of the CANCEL button listener for the listing modal (it's static)
+            const cancelListingBtn = document.getElementById('cancel-listing-btn');
+            if (cancelListingBtn) {
+                cancelListingBtn.addEventListener('click', () => {
                     closeModal('post-listing-modal');
                     document.getElementById('listing-form').reset();
                 });
