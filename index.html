@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nepal Local Connect - Local Business Directory</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CDN (Updated Link) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMD/CDQ6RzYxVvP6xqqs0cW7RjrjT2h/P27wJ0l7/J2s9e+2iYfB0y4L1Zt1t5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         /* Custom scrollbar for better aesthetics */
@@ -33,6 +35,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
 
+    <!-- Loading/Status Indicator Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
         <div class="text-center p-6 bg-white rounded-lg shadow-xl">
             <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -43,6 +46,7 @@
         </div>
     </div>
 
+    <!-- Payment Modal -->
     <div id="payment-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 transform transition-all p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Upgrade to Top Chart Listing</h2>
@@ -51,32 +55,38 @@
                 <span class="font-semibold text-blue-600">Price: NPR 500.00.</span>
             </p>
 
+            <!-- Current Listing Details -->
             <div id="payment-listing-details" class="bg-blue-50 p-3 rounded-lg mb-6 border border-blue-200 text-sm">
                 <p class="font-medium text-blue-800">Target Listing:</p>
                 <p id="modal-listing-name" class="font-bold text-lg text-blue-900 mt-1"></p>
                 <p id="modal-listing-id" class="text-xs text-blue-700 mt-0.5"></p>
             </div>
 
+            <!-- Payment Method Selection -->
             <div id="payment-methods">
                 <h3 class="font-semibold text-gray-700 mb-3">Select Payment Method (Secure Backend Required):</h3>
                 
+                <!-- Khalti Option -->
                 <button onclick="initiateKhaltiPayment()" class="w-full flex items-center justify-between p-4 mb-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors shadow-md">
                     <span class="font-bold">Pay with Khalti (Recommended)</span>
                     <i class="fas fa-wallet text-xl"></i>
                 </button>
 
+                <!-- Bank Transfer Option -->
                 <button onclick="handleBankTransfer()" class="w-full flex items-center justify-between p-4 mb-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-md">
                     <span class="font-bold">Bank Transfer (Manual)</span>
                     <i class="fas fa-university text-xl"></i>
                 </button>
             </div>
 
+            <!-- Close Button -->
             <div class="mt-6 flex justify-end">
                 <button type="button" onclick="closeModal('payment-modal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">Cancel</button>
             </div>
         </div>
     </div>
     
+    <!-- Bank Transfer Details Modal -->
     <div id="bank-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Bank Transfer Details (NPR 500.00)</h2>
@@ -98,9 +108,11 @@
         </div>
     </div>
 
+    <!-- Toast/Notification Area -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
 
+    <!-- Navigation -->
     <header class="bg-white shadow-md sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
             <div class="flex items-center space-x-2">
@@ -116,15 +128,19 @@
         </div>
     </header>
 
+    <!-- Main Content Area -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
+        <!-- Hero Section -->
         <div class="bg-blue-600 text-white p-8 rounded-xl shadow-lg mb-8">
             <h1 class="text-4xl sm:text-5xl font-extrabold mb-2">Discover Local Gems in Nepal</h1>
             <p class="text-xl font-light">Supporting local shops and restaurants, starting with Biratnagar.</p>
         </div>
 
+        <!-- Filter and Controls -->
         <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8 bg-white p-4 rounded-xl shadow-md">
             
+            <!-- City Filter -->
             <select id="city-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
                 <option value="all">All Cities (Nepal)</option>
                 <option value="biratnagar">Biratnagar</option>
@@ -133,6 +149,7 @@
                 <option value="dharan">Dharan</option>
             </select>
 
+            <!-- Category Filter -->
             <select id="category-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
                 <option value="all">All Categories</option>
                 <option value="restaurant">Restaurant</option>
@@ -141,17 +158,21 @@
                 <option value="hotel">Hotel/Stay</option>
             </select>
 
+            <!-- Search Bar -->
             <input type="text" id="search-input" oninput="filterListings()" placeholder="Search by name or description..." class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
         </div>
 
+        <!-- Listings Grid -->
         <div id="listings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
+            <!-- Listings will be injected here by JavaScript -->
+        </div>
 
         <p id="no-results" class="text-center text-gray-500 mt-12 text-xl hidden">
             No businesses found matching your criteria.
         </p>
     </main>
 
+    <!-- Add/Post Listing Modal -->
     <div id="post-listing-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl m-4 transform transition-all p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Local Business</h2>
@@ -203,6 +224,7 @@
         </div>
     </div>
 
+    <!-- Review Modal -->
     <div id="review-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Review</h2>
@@ -212,7 +234,8 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Your Rating</label>
                     <div id="rating-stars" class="flex items-center space-x-1 mt-1 text-2xl text-gray-400">
-                        </div>
+                        <!-- Stars will be generated by JS -->
+                    </div>
                     <input type="hidden" id="review-rating" required value="0">
                 </div>
 
@@ -229,6 +252,99 @@
         </div>
     </div>
 
+    <!-- Toast/Notification Area -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+
+    <!-- Navigation -->
+    <header class="bg-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-map-marker-alt text-2xl text-blue-600"></i>
+                <a href="/" class="text-2xl font-extrabold text-gray-900">NP Local Connect</a>
+            </div>
+            <nav class="flex items-center space-x-4">
+                <a href="#listings" class="text-gray-600 hover:text-blue-600 transition-colors font-medium">Home</a>
+                <button id="post-business-btn" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold shadow-md">
+                    + Post My Business
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Hero Section -->
+        <div class="bg-blue-600 text-white p-8 rounded-xl shadow-lg mb-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold mb-2">Discover Local Gems in Nepal</h1>
+            <p class="text-xl font-light">Supporting local shops and restaurants, starting with Biratnagar.</p>
+        </div>
+
+        <!-- Filter and Controls -->
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8 bg-white p-4 rounded-xl shadow-md">
+            
+            <!-- City Filter -->
+            <select id="city-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                <option value="all">All Cities (Nepal)</option>
+                <option value="biratnagar">Biratnagar</option>
+                <option value="kathmandu">Kathmandu</option>
+                <option value="pokhara">Pokhara</option>
+                <option value="dharan">Dharan</option>
+            </select>
+
+            <!-- Category Filter -->
+            <select id="category-filter" onchange="filterListings()" class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                <option value="all">All Categories</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="shop">Local Shop</option>
+                <option value="service">Service</option>
+                <option value="hotel">Hotel/Stay</option>
+            </select>
+
+            <!-- Search Bar -->
+            <input type="text" id="search-input" oninput="filterListings()" placeholder="Search by name or description..." class="w-full sm:w-1/3 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors">
+        </div>
+
+        <!-- Listings Grid -->
+        <div id="listings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Listings will be injected here by JavaScript -->
+        </div>
+
+        <p id="no-results" class="text-center text-gray-500 mt-12 text-xl hidden">
+            No businesses found matching your criteria.
+        </p>
+    </main>
+
+    <!-- Review Modal -->
+    <div id="review-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Review</h2>
+            <div id="review-listing-info" class="mb-4 text-gray-700 font-medium"></div>
+            <form id="review-form" class="space-y-4">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Your Rating</label>
+                    <div id="rating-stars" class="flex items-center space-x-1 mt-1 text-2xl text-gray-400">
+                        <!-- Stars will be generated by JS -->
+                    </div>
+                    <input type="hidden" id="review-rating" required value="0">
+                </div>
+
+                <div>
+                    <label for="review-text" class="block text-sm font-medium text-gray-700">Your Comments</label>
+                    <textarea id="review-text" rows="4" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('review-modal')" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Imports (Using type="module" for tree-shaking and modern SDKs) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
@@ -406,10 +522,10 @@
                 await addDoc(getPublicListingsCollection(), newListing);
                 showToast('Listing submitted successfully! It will appear shortly.');
                 
-                // FIX: Added explicit call to close modal and reset form on success
-                closeModal('post-listing-modal');
+                // FINAL FIX: Ensure form reset and modal close execute after successful addDoc
                 e.target.reset(); 
-
+                closeModal('post-listing-modal');
+                
             } catch (error) {
                 showToast('Error saving listing. Check console.', 'error');
                 console.error("Error submitting listing: ", error);
@@ -454,7 +570,7 @@
                     });
                 });
 
-                showToast('Review submitted! Thank you for your feedback.');
+                showToast('Review submitted! Thank yourself for your feedback.');
                 closeModal('review-modal');
                 e.target.reset();
                 currentListingIdToReview = null;
