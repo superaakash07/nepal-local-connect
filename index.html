@@ -331,7 +331,7 @@
         }
 
         // Modal Handlers
-        function showModal(id, listingId = null) {
+        window.showModal = function(id, listingId = null) {
             // Check if user is required to be signed in
             if ((id === 'post-listing-modal' || id === 'review-modal' || id === 'payment-modal') && !userId) {
                 showToast("You must sign in with Google to perform this action.", 'error');
@@ -360,7 +360,7 @@
             }
         }
 
-        function closeModal(id) {
+        window.closeModal = function(id) {
             const modal = document.getElementById(id);
             if (modal) {
                 modal.classList.add('hidden');
