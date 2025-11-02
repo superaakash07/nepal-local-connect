@@ -436,12 +436,12 @@
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app); 
+                setupRealtimeListener();
                 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
                         if (!authInitialized) {
-                            setupRealtimeListener();
                             authInitialized = true;
                         }
                     } else {
