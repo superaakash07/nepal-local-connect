@@ -46,6 +46,7 @@
         }
         </style> 
 </head>
+
 <body class="bg-gray-50 min-h-screen font-sans">
 
     <!-- Loading/Status Indicator Overlay -->
@@ -684,7 +685,7 @@
                         <i class="fas fa-sign-in-alt mr-1"></i> Sign In to Review
                     </button>`;
                 }
-
+            }
                 if (isOwner) {
                     ownerButtonsHTML = `
                         <button onclick="showModal('payment-modal', '${listing.id}')" class="${topChartButtonClass}">
@@ -744,6 +745,8 @@
             });
 
         }
+
+    
         
     
         function generateStars(rating) {
