@@ -675,6 +675,7 @@
 
                 // Review button logic
                 if (isLoggedIn) { 
+                    if (!isOwner) {
                     reviewButtonHTML = `<button onclick="showModal('review-modal', '${listing.id}')" class="${reviewButtonClass}">
                         <i class="fas fa-star mr-1"></i> Add Review
                     </button>`;
