@@ -614,27 +614,31 @@
         // --- Rendering and Filtering (Unchanged) ---
 
         window.filterListings = function() {
-            const city = document.getElementById('city-filter').value.toLowerCase(); 
-            const category = document.getElementById('category-filter').value.toLowerCase(); 
-            const search = document.getElementById('search-input').value.toLowerCase();
+    const city = document.getElementById('city-filter').value.toLowerCase();
+    const category = document.getElementById('category-filter').value.toLowerCase();
+    const search = document.getElementById('search-input').value.toLowerCase();
 
-                const filtered = allListings.filter(listing => {
+    const filtered = allListings.filter(listing => {
         const matchesCity = city === 'all' || (listing.city && listing.city.toLowerCase() === city);
         const matchesCategory = category === 'all' || (listing.category && listing.category.toLowerCase() === category);
-        const matchesSearch = search === '' ||
+        const matchesSearch =
+            search === '' ||
             (listing.name && listing.name.toLowerCase().includes(search)) ||
             (listing.description && listing.description.toLowerCase().includes(search));
+
         return matchesCity && matchesCategory && matchesSearch;
     });
 
-    // Sorting Logic
+    // Sorting Logic (inside the same function)
     filtered.sort((a, b) => {
         if (a.is_featured && !b.is_featured) return -1;
         if (!a.is_featured && b.is_featured) return 1;
         return parseFloat(b.avgRating) - parseFloat(a.avgRating);
     });
 
-    renderListings(filtered);
+    renderListings(filtered); // Still inside the function
+};
+
 
 
         function renderListings(listings) {
