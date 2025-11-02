@@ -748,9 +748,16 @@
             const fullStar = `<i class="fas fa-star" style="color: var(--color-accent);"></i>`;
             const emptyStar = `<i class="far fa-star" style="color: var(--color-accent);"></i>`;
             let stars = '';
-            for (let i = 1; i <= 5; i++) {
-                stars += i <= Math.round(rating) ? fullStar : emptyStar;
-            }
+    // Round to the nearest whole number (3.5 becomes 4)
+    const totalFilledStars = Math.round(rating); 
+
+    for (let i = 1; i <= 5; i++) {
+        if (i <= totalFilledStars) {
+            stars += fullStar;
+        } else {
+            stars += emptyStar;
+        }
+    }
             return stars;
         }
 
