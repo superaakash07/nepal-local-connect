@@ -616,8 +616,8 @@
             const search = document.getElementById('search-input').value.toLowerCase();
 
             const filtered = allListings.filter(listing => {
-                const matchesCity = city === 'all' || listing.city === city;
-                const matchesCategory = category === 'all' || listing.category === category;
+                const matchesCity = city === 'all' || listing.city.toLowerCase() === city;
+                const matchesCategory = category === 'all' || listing.category.toLowerCase() === category;
                 const matchesSearch = search === '' || 
                                       listing.name.toLowerCase().includes(search) || 
                                       listing.description.toLowerCase().includes(search);
