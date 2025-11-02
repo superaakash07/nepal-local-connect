@@ -236,6 +236,12 @@
     </div>
 
     <!-- Review Modal -->
+     <div class="mb-4">
+    <label class="block text-gray-700 text-sm font-bold mb-2">Your Rating</label>
+    <div id="stars-container" class="flex text-2xl cursor-pointer">
+        </div>
+    <input type="hidden" id="review-rating" name="rating" value="0">
+</div>
     <div id="review-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden items-center justify-center overflow-y-auto">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg m-4 p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Review</h2>
@@ -748,21 +754,24 @@
             return stars;
         }
 
-        function renderRatingStars(initialRating) {
+        window.renderRatingStars = function(initialRating = 0) {
             const starsContainer = document.getElementById('rating-stars');
-            starsContainer.innerHTML = '';
-            
-            for (let i = 1; i <= 5; i++) {
-                const star = document.createElement('i');
-                star.className = `cursor-pointer transition-colors ${i <= initialRating ? 'fas text-yellow-500' : 'far text-gray-400 hover:text-yellow-400'} fa-star`;
-                star.dataset.rating = i;
-                star.onclick = () => {
-                    document.getElementById('review-rating').value = i;
-                    renderRatingStars(i); // Re-render to update selected stars
-                };
-                starsContainer.appendChild(star);
-            }
-        }
+           if (!starsContainer) return;
+
+    starsContainer.innerHTML = ''; // Clear previous stars
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('span');
+        star.classList.add('text-gray-400', 'hover:text-yellow-500');
+        star.innerHTML = i <= initialRating ? '&#9733;' : '&#9734;'; // Filled or empty star
+        star.dataset.rating = i; // Store rating value
+
+        star.onclick = () => {
+            document.getElementById('review-rating').value = i;
+            window.renderRatingStars(i); // Re-render to update selected stars
+        };
+        starsContainer.appendChild(star);
+    }
+};
         
         // --- Payment Logic (Unchanged) ---
         function initiateKhaltiPayment() {
