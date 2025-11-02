@@ -35,7 +35,7 @@
         }
         .card-image-placeholder {
             height: 150px;
-            background-color: #f3ff6;
+            background-color: #f3ff66;
             background-image: linear-gradient(135deg, #FFD700 10%, #FF4438 100%);
             display: flex;
             align-items: center;
@@ -268,9 +268,6 @@
             </form>
         </div>
     </div>
-
-    <!-- Toast/Notification Area -->
-    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
 
     <!-- Firebase SDK Imports (Using type="module" for tree-shaking and modern SDKs) -->
@@ -621,19 +618,15 @@
             const category = document.getElementById('category-filter').value.toLowerCase(); 
             const search = document.getElementById('search-input').value.toLowerCase();
 
-            const filtered = allListings.filter(listing => {
-            
-        // Use .toLowerCase() and safe access on listing data
+                const filtered = allListings.filter(listing => {
         const matchesCity = city === 'all' || (listing.city && listing.city.toLowerCase() === city);
         const matchesCategory = category === 'all' || (listing.category && listing.category.toLowerCase() === category);
-        
-        const matchesSearch = search === '' || 
-                                    (listing.name && listing.name.toLowerCase().includes(search)) || 
-                                    (listing.description && listing.description.toLowerCase().includes(search));
-        
+        const matchesSearch = search === '' ||
+            (listing.name && listing.name.toLowerCase().includes(search)) ||
+            (listing.description && listing.description.toLowerCase().includes(search));
         return matchesCity && matchesCategory && matchesSearch;
     });
-        }
+
     // Sorting Logic
     filtered.sort((a, b) => {
         if (a.is_featured && !b.is_featured) return -1;
