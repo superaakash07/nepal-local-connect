@@ -247,6 +247,18 @@
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Review</h2>
             <div id="review-listing-info" class="mb-4 text-gray-700 font-medium"></div>
             <form id="review-form" class="space-y-4">
+
+                <div id="review-section">
+                <button id="sign-in-to-review"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                     Sign in to give review
+                     </button>
+
+                     <form id="review-form" class="hidden">
+                      <!-- your rating inputs, textarea, etc. -->
+                 </form>
+                </div>
+
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Your Rating</label>
@@ -664,18 +676,8 @@
                 let ownerButtonsHTML = '';
 
                 // Review button logic
-                <div id="review-section">
-                    <button id="sign-in-to-review"
-                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                         Sign in to give review
-                         </button>
-
-                         <form id="review-form" class="hidden">
-                         <!-- your rating inputs, textarea, etc. -->
-                     </form>
-                </div>
-
-                if (isLoggedIn) { 
+               
+                    if (isLoggedIn) { 
                     if (!isOwner) {
                     reviewButtonHTML = `<button onclick="showModal('review-modal', '${listing.id}')" class="${reviewButtonClass}">
                         <i class="fas fa-star mr-1"></i> Add Review
