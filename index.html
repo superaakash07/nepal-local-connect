@@ -442,23 +442,15 @@
                 setupRealtimeListener();
                 
                 onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        if (!authInitialized) {
-                            authInitialized = true;
+                        if (user) {
+                                document.getElementById('review-form').classList.remove('hidden');
+                                document.getElementById('sign-in-to-review').classList.add('hidden');
+                        } else {
+                                document.getElementById('review-form').classList.add('hidden');
+                                document.getElementById('sign-in-to-review').classList.remove('hidden');
                         }
-                    } else {
-                        // FIX: When user signs out or no user is present, clear userId
-                        userId = null; 
-                        if (authInitialized) {
-                            // Re-render listings to hide owner buttons if user signs out
-                            filterListings(); 
-                        }
-                    }
-                    
-                    renderAuthUI(user);
-                    document.getElementById('loading-overlay').classList.add('hidden');
-                });
+                    });
+
 
             } catch (error) {
                 console.error("Firebase Initialization Error:", error);
@@ -672,6 +664,17 @@
                 let ownerButtonsHTML = '';
 
                 // Review button logic
+                <div id="review-section">
+                    <button id="sign-in-to-review"
+                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                         Sign in to give review
+                         </button>
+
+                         <form id="review-form" class="hidden">
+                         <!-- your rating inputs, textarea, etc. -->
+                     </form>
+                </div>
+
                 if (isLoggedIn) { 
                     if (!isOwner) {
                     reviewButtonHTML = `<button onclick="showModal('review-modal', '${listing.id}')" class="${reviewButtonClass}">
@@ -743,9 +746,6 @@
 
         }
 
-    
-        
-    
         function generateStars(rating) {
             const fullStar = `<i class="fas fa-star" style="color: var(--color-accent);"></i>`;
             const emptyStar = `<i class="far fa-star" style="color: var(--color-accent);"></i>`;
