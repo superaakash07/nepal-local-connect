@@ -467,6 +467,10 @@
                 }
             });
 
+            document.getElementById('loading-overlay').classList.add('hidden');
+            showToast("Firebase services initialized successfully.", "success");
+
+
 
             } catch (error) {
                 console.error("Firebase Initialization Error:", error);
